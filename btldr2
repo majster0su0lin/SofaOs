@@ -68,4 +68,4 @@ krnl: db "forewarding to kernel, bye bye bios forever", 0x0D, 0x0A, 0
 pctsek: dw 0
 ulzprbs: times 24 * 32 db 0
 drdsk: db 0
-times 1024 - ($ - $$) db 0
+times 2048 - ($ - $$) db 0
