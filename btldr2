@@ -44,9 +44,18 @@ memend:
 hope:
    mov si, krnl
    call crint
+   mov ax, 0x0000
+   mov bx, 0xFFFF
+   mov es, ax
+   mov fs, bx
+   mov byte [es:0x0500], 0x00
+   mov byte [fs:0x0510], 0xFF
+   mov al, [es:0x0500]
+   cmp al, 0xFF
+   je a20er
    mov dl, [drdsk]
    mov bx, [pctsek]
-   mov cx, [ulzprbs]
+   mov cx, ulzprbs
    jmp 0x1000:0x0000
 a20er:
    in al, 0x92

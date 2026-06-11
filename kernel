@@ -12,6 +12,8 @@ start:
    mov al, 0x0A
    int 0x10
    jmp $
+gdt:
+
 disk: db 0
 pamet: db 0
 pamet2: db 0
