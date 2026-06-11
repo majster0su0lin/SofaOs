@@ -23,7 +23,7 @@ hltx:
    mov dl, [drdsk]
    mov si, DAP
    int 0x13
-   jc loaderror
+   jc near loaderror
    xor ebx, ebx
    mov di, ulzprbs
 memcheck:
@@ -31,11 +31,11 @@ memcheck:
    mov edx, 0x534D4150
    mov eax, 0xE820
    int 0x15
-   jc memend
+   jc near memend
    add di, 24
    inc word [pctsek]
    cmp ebx, 0
-   je memend
+   je near memend
    jmp memcheck
 memend:
    mov ax, 0x2401
