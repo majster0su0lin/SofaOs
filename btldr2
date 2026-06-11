@@ -1,0 +1,62 @@
+[bits 16]
+[org 0x7E00]
+   jmp start
+crint:
+   mov ah, 0x0E
+clp:
+   lodsb
+   test al, al
+   jz cen
+   int 0x10
+   jmp clp
+cen:
+   ret
+start:
+   mov [drdsk], dl
+   xor ax, ax
+   mov ds, ax
+   mov es, ax
+hltx:
+   mov si, hellotxt
+   call crint
+   mov ah, 0x42
+   mov dl, [drdsk]
+   mov si, DAP
+   int 0x13
+   jc loaderror
+   xor ebx, ebx
+   mov di, ulzprbs
+memcheck:
+   mov ecx, 24
+   mov edx, 0x534D4150
+   mov eax, 0xE820
+   int 0x15
+   jc memend
+   add di, 24
+   inc word [pctsek]
+   cmp ebx, 0
+   je memend
+   jmp memcheck
+memend:
+   mov si, krnl
+   call crint
+   mov dl, [drdsk]
+   jmp 0x1000:0x0000
+loaderror:
+   mov si, kebad
+   call crint
+   jmp $
+DAP:
+db 16
+db 0
+dw 1
+dw 0x0000
+dw 0x1000
+dq 2
+hellotxt: db "Hello from 2. bootloader XD", 0x0D, 0x0A, 0
+kebad: db "crashed while loading kernel please restart pc and try again", 0x0D, 0x0A, 0
+krnl: db "forewarding to kernel, bye bye bios forever", 0x0D, 0x0A, 0
+pctsek: dw 0
+ulzprbs: times 24 * 32 db 0
+drdsk: db 0
+times 512 - ($ - $$) db 0
