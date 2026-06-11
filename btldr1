@@ -88,7 +88,7 @@ retry:
 lbashit:
 db 16
 db 0
-dw 1
+dw 4
 dw 0x7E00
 dw 0x0000
 dq 1

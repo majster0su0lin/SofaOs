@@ -1,6 +1,9 @@
 [bits 16]
 [org 0x0000]
 start:
+   mov [disk], dl
+   mov [pamet], bx
+   mov [pamet2], cx
    mov ah, 0x0E
    mov al,'k'
    int 0x10
@@ -9,4 +12,7 @@ start:
    mov al, 0x0A
    int 0x10
    jmp $
+disk: db 0
+pamet: db 0
+pamet2: db 0
 times 512 - ($ - $$) db 0
