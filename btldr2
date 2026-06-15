@@ -69,9 +69,9 @@ loaderror:
 DAP:
 db 16
 db 0
-dw 1
-dw 0x0000
+dw 2
 dw 0x1000
+dw 0x0000
 dq 5
 hellotxt: db "Hello from 2. bootloader XD", 0x0D, 0x0A, 0
 kebad: db "crashed while loading kernel please restart pc and try again", 0x0D, 0x0A, 0

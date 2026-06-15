@@ -98,6 +98,7 @@ rtrytxt: db "something went wrong retriing", 0x0D, 0x0A, 0
 dracekovidsk: db 0
 times 510 - ($ - $$) db 0
 dw 0xAA55
+
 [bits 16]
 [org 0x7E00]
    jmp start
@@ -142,10 +143,21 @@ memend:
    int 0x15
    jc a20er
 hope:
+   mov ax, 0x0000
+   mov bx, 0xFFFF
+   mov es, ax
+   mov fs, bx
+   mov byte [es:0x0500], 0x00
+   mov byte [fs:0x0510], 0xFF
+   mov al, [es:0x0500]
+   cmp al, 0xFF
+   je a20er
    mov si, krnl
    call crint
    mov dl, [drdsk]
-   jmp 0x1000:0x0000
+   mov bx, [pctsek]
+   mov cx, ulzprbs
+   jmp 0x0000:0x1000
 a20er:
    in al, 0x92
    or al, 2
@@ -170,14 +182,63 @@ ulzprbs: times 24 * 32 db 0
 drdsk: db 0
 times 2048 - ($ - $$) db 0
 [bits 16]
-[org 0x0000]
+[org 0x1000]
 start:
+   xor ax, ax
+   mov ds, ax
+   mov es, ax
+   mov [disk], dl
+   mov [pamet], bx
+   mov [pamet2], cx
    mov ah, 0x0E
-   mov al,'k'
+   mov al, 'K'
    int 0x10
    mov al, 0x0D
    int 0x10
    mov al, 0x0A
    int 0x10
+   cli
+   lgdt [gdtp]
+   mov eax, cr0
+   or eax, 1
+   mov cr0, eax
+   jmp CIDE_SEG:fnl32b
+align 4
+gdts:
+dd 0, 0
+gdtc:
+dw 0xFFFF
+dw 0x0000
+db 0x00
+db 0x9A
+db 0xCF
+db 0x00
+gdtd:
+dw 0xFFFF
+dw 0x0000
+db 0x00
+db 0x92
+db 0xCF
+db 0x00
+gdte:
+gdtp:
+   dw gdte - gdts -1
+   dd gdts
+CIDE_SEG equ gdtc -gdts
+DATA_SEG equ gdtd - gdts
+disk: db 0
+pamet: dw 0
+pamet2: dw 0
+fnl32b:
+[bits 32]
+   mov ax, DATA_SEG
+   mov ds, ax
+   mov es, ax
+   mov fs, ax
+   mov gs, ax
+   mov ss, ax
+   mov esp, 0x67000
+   mov byte [0xB8000], 'p'
+   mov byte [0xB8001], 0x0F
    jmp $
-times 512 - ($ - $$) db 0
+times 1024 - ($ - $$) db 0

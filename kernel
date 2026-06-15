@@ -1,5 +1,5 @@
 [bits 16]
-[org 0x10000]
+[org 0x1000]
 start:
    xor ax, ax
    mov ds, ax
@@ -40,7 +40,7 @@ db 0x00
 gdte:
 gdtp:
    dw gdte - gdts -1
-   dd 0x10000 + gdts
+   dd gdts
 CIDE_SEG equ gdtc -gdts
 DATA_SEG equ gdtd - gdts
 disk: db 0
@@ -56,6 +56,6 @@ fnl32b:
    mov ss, ax
    mov esp, 0x67000
    mov byte [0xB8000], 'p'
-   mov byte [0xB8001], 0x0F
+   mov byte [0xB8001], 0x0C
    jmp $
-times 512 - ($ - $$) db 0
+times 1024 - ($ - $$) db 0
