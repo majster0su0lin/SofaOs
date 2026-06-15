@@ -170,13 +170,13 @@ loaderror:
 DAP:
 db 16
 db 0
-dw 1
-dw 0x0000
+dw 2
 dw 0x1000
+dw 0x0000
 dq 5
 hellotxt: db "Hello from 2. bootloader XD", 0x0D, 0x0A, 0
 kebad: db "crashed while loading kernel please restart pc and try again", 0x0D, 0x0A, 0
-krnl: db "forewarding to kernel, bye bye bios forever", 0x0D, 0x0A, 0
+krnl: db "forewarding to stage 3", 0x0D, 0x0A, 0
 pctsek: dw 0
 ulzprbs: times 24 * 32 db 0
 drdsk: db 0
@@ -197,12 +197,24 @@ start:
    int 0x10
    mov al, 0x0A
    int 0x10
+   mov si, bbios
+   call cpirnt
    cli
    lgdt [gdtp]
    mov eax, cr0
    or eax, 1
    mov cr0, eax
    jmp CIDE_SEG:fnl32b
+cpirnt:
+   mov ah, 0x0E
+lp:
+   lodsb
+   test al, al
+   jz kn
+   int 0x10
+   jmp lp
+kn:
+   ret
 align 4
 gdts:
 dd 0, 0
@@ -227,6 +239,7 @@ gdtp:
 CIDE_SEG equ gdtc -gdts
 DATA_SEG equ gdtd - gdts
 disk: db 0
+bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
 pamet: dw 0
 pamet2: dw 0
 fnl32b:
@@ -239,6 +252,6 @@ fnl32b:
    mov ss, ax
    mov esp, 0x67000
    mov byte [0xB8000], 'p'
-   mov byte [0xB8001], 0x0F
+   mov byte [0xB8001], 0x0C
    jmp $
 times 1024 - ($ - $$) db 0
