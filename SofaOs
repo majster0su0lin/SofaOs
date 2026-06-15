@@ -96,6 +96,13 @@ errtxt: db "bruh pc too old please modify bootloader 1", 0x0D, 0x0A, 0
 startxt: db "hello from 1. stage sofa bootloader :)", 0x0D, 0x0A, 0
 rtrytxt: db "something went wrong retriing", 0x0D, 0x0A, 0
 dracekovidsk: db 0
+times 446 - ($ - $$) db 0
+db 0x80
+db 0x01, 0x01, 0x00
+db 0x7F
+db 0xFE, 0x3F, 0x01
+dd 1
+dd 2048
 times 510 - ($ - $$) db 0
 dw 0xAA55
 
