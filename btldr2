@@ -75,7 +75,7 @@ dw 0x0000
 dq 5
 hellotxt: db "Hello from 2. bootloader XD", 0x0D, 0x0A, 0
 kebad: db "crashed while loading kernel please restart pc and try again", 0x0D, 0x0A, 0
-krnl: db "forewarding to kernel, bye bye bios forever", 0x0D, 0x0A, 0
+krnl: db "forewarding to stage 3", 0x0D, 0x0A, 0
 pctsek: dw 0
 ulzprbs: times 24 * 32 db 0
 drdsk: db 0

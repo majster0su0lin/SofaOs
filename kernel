@@ -14,12 +14,24 @@ start:
    int 0x10
    mov al, 0x0A
    int 0x10
+   mov si, bbios
+   call cpirnt
    cli
    lgdt [gdtp]
    mov eax, cr0
    or eax, 1
    mov cr0, eax
    jmp CIDE_SEG:fnl32b
+cpirnt:
+   mov ah, 0x0E
+lp:
+   lodsb
+   test al, al
+   jz kn
+   int 0x10
+   jmp lp
+kn:
+   ret
 align 4
 gdts:
 dd 0, 0
@@ -44,6 +56,7 @@ gdtp:
 CIDE_SEG equ gdtc -gdts
 DATA_SEG equ gdtd - gdts
 disk: db 0
+bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
 pamet: dw 0
 pamet2: dw 0
 fnl32b:
