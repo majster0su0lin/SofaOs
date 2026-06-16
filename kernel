@@ -119,14 +119,19 @@ looo:
    jmp CODE67_SEG:epstien
 [bits 64]
 epstien:
+   jmp miguel
+cls:
    mov rax, 0xB8000
 lop:
    mov byte [rax], 0x00
    cmp rax, 0xB8FA0
-   je miguel
+   je ngeer
    add rax, 1
    jmp lop
+ngeer:
+   ret
 miguel:
+   call cls
    mov al, 0x0C
    mov byte [0xB8000], ';'
    mov byte [0xB8001], al
