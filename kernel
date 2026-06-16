@@ -120,6 +120,247 @@ looo:
 [bits 64]
 epstien:
    jmp miguel
+ksnc:
+   sti
+   xor rax, rax
+   in al, 0x60
+   mov cl, al
+   mov al, 0x20
+   out 0x20, al
+   mov al, cl
+   cmp rax, 0
+   je err
+   cmp rax, 10
+   jle num
+   cmp rax, 11
+   je zer
+   cmp rax, 0x0C
+   je min
+   cmp rax, 0x0D
+   je eql
+   cmp rax, 0x0E
+   je del
+   cmp rax, 0x39
+   je spc
+   cmp rax, 0x2A
+   je shft
+letters:
+   movzx rbx, byte [shift]
+   cmp rax, 0x1E
+   je keya
+   cmp rax, 0x30
+   je keyb
+   cmp rax, 0x2E
+   je keyc
+   cmp rax, 0x20
+   je keyd
+   cmp rax, 0x12
+   je keye
+   cmp rax, 0x21
+   je keyf
+   cmp rax, 0x22
+   je keyg
+   cmp rax, 0x23
+   je keyh
+   cmp rax, 0x17
+   je keyi
+   cmp rax, 0x24
+   je keyj
+   cmp rax, 0x25
+   je keyk
+   cmp rax, 0x26
+   je keyl
+   cmp rax, 0x32
+   je keym
+   cmp rax, 0x31
+   je keyn
+   cmp rax, 0x18
+   je keyo
+   cmp rax, 0x19
+   je keyp
+   cmp rax, 0x10
+   je keyq
+   cmp rax, 0x13
+   je keyr
+   cmp rax, 0x1F
+   je keys
+   cmp rax, 0x14
+   je keyt
+   cmp rax, 0x16
+   je keyu
+   cmp rax, 0x2F
+   je keyv
+   cmp rax, 0x11
+   je keyw
+   cmp rax, 0x2D
+   je keyx
+   cmp rax, 0x15
+   je keyy
+   cmp rax, 0x2C
+   je keyz
+   cmp rax, 0xAA
+   je shftrel
+   jmp norec
+err:
+   iretq
+num:
+   sub rax, 1
+   add rax, 48
+   mov byte [char], al
+   iretq
+zer:
+   mov byte [char], 48
+   iretq
+min:
+   mov byte [char], '-'
+   iretq
+eql:
+   mov byte [char], '='
+   iretq
+del:
+   mov byte [char], 8
+   iretq
+spc:
+   mov byte [char], 32
+   iretq
+shft:
+   mov byte [shift], 32
+   iretq
+shftrel:
+   mov byte [shift], 0
+   iretq
+norec:
+   iretq
+keya:
+   mov rax, 97
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyb:
+   mov rax, 98
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyc:
+   mov rax, 99
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyd:
+   mov rax, 100
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keye:
+   mov rax, 101
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyf:
+   mov rax, 102
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyg:
+   mov rax, 103
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyh:
+   mov rax, 104
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyi:
+   mov rax, 105
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyj:
+   mov rax, 106
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyk:
+   mov rax, 107
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyl:
+   mov rax, 108
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keym:
+   mov rax, 109
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyn:
+   mov rax, 110
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyo:
+   mov rax, 111
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyp:
+   mov rax, 112
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyq:
+   mov rax, 113
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyr:
+   mov rax, 114
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keys:
+   mov rax, 115
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyt:
+   mov rax, 116
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyu:
+   mov rax, 117
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyv:
+   mov rax, 118
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyw:
+   mov rax, 119
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyx:
+   mov rax, 120
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyy:
+   mov rax, 121
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyz:
+   mov rax, 122
+   sub rax, rbx
+   mov byte [char], al
+   iretq
 cls:
    mov rax, 0xB8000
 lop:
@@ -137,5 +378,51 @@ miguel:
    mov byte [0xB8001], al
    mov byte [0xB8002], 'P'
    mov byte [0xB8003], al
-   jmp $
-times 1024 - ($ - $$) db 0
+   mov al, 0x11
+   out 0x20, al
+   out 0xA0, al
+   mov al, 0x20
+   out 0x21, al
+   mov al, 0x28
+   out 0xA1, al
+   mov al, 0x04
+   out 0x21, al
+   mov al, 0x02
+   out 0xA1, al
+   mov al, 0x01
+   out 0x21, al
+   out 0xA1, al
+   mov al, 0xFD
+   out 0x21, al
+   mov al, 0xFF
+   out 0xA1, al
+   mov rax, ksnc
+   mov rdi, 0x80420
+   mov [rdi], ax
+   shr rax, 16
+   mov word [rdi + 2], CODE67_SEG
+   mov byte [rdi + 4], 0
+   mov byte [rdi + 5], 0x8E
+   mov [rdi + 6], ax
+   shr rax, 16
+   mov [rdi + 8], eax
+   mov dword [rdi +2], 0x00000000
+   lidt [idttbl]
+   sti
+testt:
+   mov cl, byte [char]
+   cmp cl, 0
+   je testt
+   mov byte [0xB8000], cl
+   mov byte [0xB8001], 0x07
+   mov byte [char], 0
+   jmp testt
+idt:
+db 0
+shift: db 0
+curzor: dq 0
+char: db 0
+idttbl:
+dw 4095
+dq 0x80210
+times 2048 - ($ - $$) db 0
