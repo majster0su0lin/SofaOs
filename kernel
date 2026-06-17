@@ -235,7 +235,12 @@ eql:
    pop rax
    iretq
 del:
-   mov byte [char], 8
+   xor rax, rax
+   mov qword rax, [curzor]
+   sub qword rax, 2
+   mov byte [rax + 1], 0x00
+   mov byte [rax], 0x00
+   mov qword [curzor], rax
    pop rbx
    pop rcx
    pop rax
@@ -517,20 +522,26 @@ miguel:
    shr rax, 16
    mov [rdi + 8], eax
    mov dword [rdi + 12], 0x00000000
+   mov qword [curzor], 0xB8000
    lidt [idttbl]
    sti
 testt:
    mov dl, byte [char]
    cmp dl, 0
    je testt
-   mov byte [0xB8000], dl
-   mov byte [0xB8001], 0x07
+   xor rax, rax
+   mov qword rax, [curzor]
+   mov byte [rax], dl
+   mov byte [rax + 1], 0x07
+   add qword rax, 2
+   mov qword [curzor], rax
    mov byte [char], 0
    jmp testt
 idt:
 db 0
 shift: db 0
 curzor: dq 0
+tst: dq 0
 char: db 0
 idttbl:
 dw 4095
