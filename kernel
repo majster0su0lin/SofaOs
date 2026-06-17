@@ -504,7 +504,7 @@ miguel:
    mov qword [curzor], 0xB8000
    mov rdx, head
    xor rcx, rcx
-   mov cl, 0x0C
+   mov cl, 0x7C
    call cpritn
    mov al, 0x11
    out 0x20, al
@@ -558,5 +558,5 @@ char: db 0
 idttbl:
 dw 4095
 dq 0x80210
-head: db 'Hello SofaOs here!', 0
-times 2048 - ($ - $$) db 0
+head: db '+------------------------------------------------------------------------------+|                                 SofaOS X64                                   |+------------------------------------------------------------------------------+', 0
+times 4096 - ($ - $$) db 0
