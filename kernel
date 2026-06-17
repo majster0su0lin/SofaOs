@@ -121,7 +121,9 @@ looo:
 epstien:
    jmp miguel
 ksnc:
-   sti
+   push rax
+   push rcx
+   push rbx
    xor rax, rax
    in al, 0x60
    mov cl, al
@@ -202,164 +204,272 @@ letters:
    je shftrel
    jmp norec
 err:
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 num:
    sub rax, 1
    add rax, 48
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 zer:
    mov byte [char], 48
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 min:
    mov byte [char], '-'
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 eql:
    mov byte [char], '='
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 del:
    mov byte [char], 8
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 spc:
    mov byte [char], 32
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 shft:
    mov byte [shift], 32
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 shftrel:
    mov byte [shift], 0
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 norec:
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keya:
    mov rax, 97
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyb:
    mov rax, 98
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyc:
    mov rax, 99
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyd:
    mov rax, 100
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keye:
    mov rax, 101
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyf:
    mov rax, 102
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyg:
    mov rax, 103
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyh:
    mov rax, 104
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyi:
    mov rax, 105
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyj:
    mov rax, 106
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyk:
    mov rax, 107
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyl:
    mov rax, 108
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keym:
    mov rax, 109
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyn:
    mov rax, 110
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyo:
    mov rax, 111
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyp:
    mov rax, 112
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyq:
    mov rax, 113
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyr:
    mov rax, 114
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keys:
    mov rax, 115
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyt:
    mov rax, 116
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyu:
    mov rax, 117
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyv:
    mov rax, 118
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyw:
    mov rax, 119
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyx:
    mov rax, 120
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyy:
    mov rax, 121
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 keyz:
    mov rax, 122
    sub rax, rbx
    mov byte [char], al
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 cls:
    mov rax, 0xB8000
@@ -406,14 +516,14 @@ miguel:
    mov [rdi + 6], ax
    shr rax, 16
    mov [rdi + 8], eax
-   mov dword [rdi +2], 0x00000000
+   mov dword [rdi + 12], 0x00000000
    lidt [idttbl]
    sti
 testt:
-   mov cl, byte [char]
-   cmp cl, 0
+   mov dl, byte [char]
+   cmp dl, 0
    je testt
-   mov byte [0xB8000], cl
+   mov byte [0xB8000], dl
    mov byte [0xB8001], 0x07
    mov byte [char], 0
    jmp testt

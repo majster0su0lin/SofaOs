@@ -177,7 +177,7 @@ loaderror:
 DAP:
 db 16
 db 0
-dw 2
+dw 4
 dw 0x1000
 dw 0x0000
 dq 5
@@ -239,12 +239,20 @@ db 0x00
 db 0x92
 db 0xCF
 db 0x00
+gdt67:
+dw 0x0000
+dw 0x0000
+db 0x00
+db 0x9A
+db 0x20
+db 0x00
 gdte:
 gdtp:
    dw gdte - gdts -1
    dd gdts
 CIDE_SEG equ gdtc -gdts
 DATA_SEG equ gdtd - gdts
+CODE67_SEG equ gdt67 - gdts
 disk: db 0
 bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
 pamet: dw 0
@@ -259,6 +267,352 @@ fnl32b:
    mov ss, ax
    mov esp, 0x67000
    mov byte [0xB8000], 'p'
-   mov byte [0xB8001], 0x0C
-   jmp $
-times 1024 - ($ - $$) db 0
+   mov byte [0xB8001], 0x0
+   mov edi, 0x70000
+   xor eax, eax
+   mov ecx, 10240
+   rep stosd
+   mov dword [0x70000], 0x71003
+   mov dword [0x70004], 0x00000000
+   mov edi, 0x71000
+   mov eax, 0x72003
+   mov ecx, 8
+loo:
+   mov [edi], eax
+   mov dword [edi+4], 0
+   add edi, 8
+   add eax, 0x1000
+   loop loo
+   mov edi, 0x72000
+   mov eax, 0x00000083
+   mov edx, 0
+   mov ecx, 4096
+looo:
+   mov [edi], eax
+   mov [edi+4], edx
+   add edi, 8
+   add eax, 0x00200000
+   adc edx, 0
+   loop looo
+   mov eax, cr4
+   or eax, 1 << 5
+   mov cr4, eax
+   mov eax, 0x70000
+   mov cr3, eax
+   mov ecx, 0xC0000080
+   rdmsr
+   or eax, 1 << 8
+   wrmsr
+   mov eax, cr0
+   or eax, 1 << 31
+   mov cr0, eax
+   jmp CODE67_SEG:epstien
+[bits 64]
+epstien:
+   jmp miguel
+ksnc:
+   sti
+   xor rax, rax
+   in al, 0x60
+   mov cl, al
+   mov al, 0x20
+   out 0x20, al
+   mov al, cl
+   cmp rax, 0
+   je err
+   cmp rax, 10
+   jle num
+   cmp rax, 11
+   je zer
+   cmp rax, 0x0C
+   je min
+   cmp rax, 0x0D
+   je eql
+   cmp rax, 0x0E
+   je del
+   cmp rax, 0x39
+   je spc
+   cmp rax, 0x2A
+   je shft
+letters:
+   movzx rbx, byte [shift]
+   cmp rax, 0x1E
+   je keya
+   cmp rax, 0x30
+   je keyb
+   cmp rax, 0x2E
+   je keyc
+   cmp rax, 0x20
+   je keyd
+   cmp rax, 0x12
+   je keye
+   cmp rax, 0x21
+   je keyf
+   cmp rax, 0x22
+   je keyg
+   cmp rax, 0x23
+   je keyh
+   cmp rax, 0x17
+   je keyi
+   cmp rax, 0x24
+   je keyj
+   cmp rax, 0x25
+   je keyk
+   cmp rax, 0x26
+   je keyl
+   cmp rax, 0x32
+   je keym
+   cmp rax, 0x31
+   je keyn
+   cmp rax, 0x18
+   je keyo
+   cmp rax, 0x19
+   je keyp
+   cmp rax, 0x10
+   je keyq
+   cmp rax, 0x13
+   je keyr
+   cmp rax, 0x1F
+   je keys
+   cmp rax, 0x14
+   je keyt
+   cmp rax, 0x16
+   je keyu
+   cmp rax, 0x2F
+   je keyv
+   cmp rax, 0x11
+   je keyw
+   cmp rax, 0x2D
+   je keyx
+   cmp rax, 0x15
+   je keyy
+   cmp rax, 0x2C
+   je keyz
+   cmp rax, 0xAA
+   je shftrel
+   jmp norec
+err:
+   iretq
+num:
+   sub rax, 1
+   add rax, 48
+   mov byte [char], al
+   iretq
+zer:
+   mov byte [char], 48
+   iretq
+min:
+   mov byte [char], '-'
+   iretq
+eql:
+   mov byte [char], '='
+   iretq
+del:
+   mov byte [char], 8
+   iretq
+spc:
+   mov byte [char], 32
+   iretq
+shft:
+   mov byte [shift], 32
+   iretq
+shftrel:
+   mov byte [shift], 0
+   iretq
+norec:
+   iretq
+keya:
+   mov rax, 97
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyb:
+   mov rax, 98
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyc:
+   mov rax, 99
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyd:
+   mov rax, 100
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keye:
+   mov rax, 101
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyf:
+   mov rax, 102
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyg:
+   mov rax, 103
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyh:
+   mov rax, 104
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyi:
+   mov rax, 105
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyj:
+   mov rax, 106
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyk:
+   mov rax, 107
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyl:
+   mov rax, 108
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keym:
+   mov rax, 109
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyn:
+   mov rax, 110
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyo:
+   mov rax, 111
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyp:
+   mov rax, 112
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyq:
+   mov rax, 113
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyr:
+   mov rax, 114
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keys:
+   mov rax, 115
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyt:
+   mov rax, 116
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyu:
+   mov rax, 117
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyv:
+   mov rax, 118
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyw:
+   mov rax, 119
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyx:
+   mov rax, 120
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyy:
+   mov rax, 121
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+keyz:
+   mov rax, 122
+   sub rax, rbx
+   mov byte [char], al
+   iretq
+cls:
+   mov rax, 0xB8000
+lop:
+   mov byte [rax], 0x00
+   cmp rax, 0xB8FA0
+   je ngeer
+   add rax, 1
+   jmp lop
+ngeer:
+   ret
+miguel:
+   call cls
+   mov al, 0x0C
+   mov byte [0xB8000], ';'
+   mov byte [0xB8001], al
+   mov byte [0xB8002], 'P'
+   mov byte [0xB8003], al
+   mov al, 0x11
+   out 0x20, al
+   out 0xA0, al
+   mov al, 0x20
+   out 0x21, al
+   mov al, 0x28
+   out 0xA1, al
+   mov al, 0x04
+   out 0x21, al
+   mov al, 0x02
+   out 0xA1, al
+   mov al, 0x01
+   out 0x21, al
+   out 0xA1, al
+   mov al, 0xED
+   out 0x21, al
+   mov al, 0xFF
+   out 0xA1, al
+   mov rax, ksnc
+   mov rdi, 0x80420
+   mov [rdi], ax
+   shr rax, 16
+   mov word [rdi + 2], CODE67_SEG
+   mov byte [rdi + 4], 0
+   mov byte [rdi + 5], 0x8E
+   mov [rdi + 6], ax
+   shr rax, 16
+   mov [rdi + 8], eax
+   mov dword [rdi + 12], 0x00000000
+   lidt [idttbl]
+   sti
+testt:
+   mov dl, byte [char]
+   cmp dl, 0
+   je testt
+   mov byte [0xB8000], dl
+   mov byte [0xB8001], 0x07
+   mov byte [char], 0
+   jmp testt
+idt:
+db 0
+shift: db 0
+curzor: dq 0
+char: db 0
+idttbl:
+dw 4095
+dq 0x80210
+times 2048 - ($ - $$) db 0
