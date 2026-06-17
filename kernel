@@ -476,6 +476,19 @@ keyz:
    pop rcx
    pop rax
    iretq
+cpritn:
+   mov byte al, [rdx]
+   cmp al, 0
+   je ced
+   mov rbx, [curzor]
+   mov byte [rbx], al
+   mov byte [rbx + 1], cl
+   add rbx, 2
+   mov [curzor], rbx
+   add rdx, 1
+   jmp cpritn
+ced:
+   ret
 cls:
    mov rax, 0xB8000
 lop:
@@ -488,11 +501,11 @@ ngeer:
    ret
 miguel:
    call cls
-   mov al, 0x0C
-   mov byte [0xB8000], ';'
-   mov byte [0xB8001], al
-   mov byte [0xB8002], 'P'
-   mov byte [0xB8003], al
+   mov qword [curzor], 0xB8000
+   mov rdx, head
+   xor rcx, rcx
+   mov cl, 0x0C
+   call cpritn
    mov al, 0x11
    out 0x20, al
    out 0xA0, al
@@ -522,7 +535,6 @@ miguel:
    shr rax, 16
    mov [rdi + 8], eax
    mov dword [rdi + 12], 0x00000000
-   mov qword [curzor], 0xB8000
    lidt [idttbl]
    sti
 testt:
@@ -546,4 +558,5 @@ char: db 0
 idttbl:
 dw 4095
 dq 0x80210
+head: db 'Hello SofaOs here!', 0
 times 2048 - ($ - $$) db 0
