@@ -504,7 +504,7 @@ miguel:
    mov qword [curzor], 0xB8000
    mov rdx, head
    xor rcx, rcx
-   mov cl, 0x7C
+   mov cl, 0x4E
    call cpritn
    mov al, 0x11
    out 0x20, al
