@@ -132,6 +132,10 @@ ksnc:
    mov al, cl
    cmp rax, 0
    je err
+   cmp rax, 0xE0
+   je special
+   cmp rax, 0x1C
+   je ent
    cmp rax, 10
    jle num
    cmp rax, 11
@@ -237,10 +241,16 @@ eql:
 del:
    xor rax, rax
    mov qword rax, [curzor]
+   cmp qword rax, (0xB8000 + 480)
+   je stp
+   cmp byte [rax - 2], '>'
+   je stp
    sub qword rax, 2
-   mov byte [rax + 1], 0x00
+   mov byte [rax + 1], 0x70
+   mov byte [rax + 3], 0x00
    mov byte [rax], 0x00
    mov qword [curzor], rax
+stp:
    pop rbx
    pop rcx
    pop rax
@@ -476,6 +486,14 @@ keyz:
    pop rcx
    pop rax
    iretq
+special:
+   jmp err
+ent:
+   mov byte [char], '*'
+   pop rbx
+   pop rcx
+   pop rax
+   iretq
 cpritn:
    mov byte al, [rdx]
    cmp al, 0
@@ -490,7 +508,7 @@ cpritn:
 ced:
    ret
 cls:
-   mov rax, 0xB8000
+   mov rax, (0xB8000 + 480)
 lop:
    mov byte [rax], 0x00
    cmp rax, 0xB8FA0
@@ -535,19 +553,31 @@ miguel:
    shr rax, 16
    mov [rdi + 8], eax
    mov dword [rdi + 12], 0x00000000
+   mov rdx, usert
+   xor rcx, rcx
+   mov cl, 0x0A
+   call cpritn
    lidt [idttbl]
    sti
 testt:
    mov dl, byte [char]
    cmp dl, 0
    je testt
+   cmp dl, '*'
+   je eter
    xor rax, rax
    mov qword rax, [curzor]
    mov byte [rax], dl
    mov byte [rax + 1], 0x07
    add qword rax, 2
    mov qword [curzor], rax
+   mov byte [rax +1], 0x70
    mov byte [char], 0
+   jmp testt
+eter:
+   call cls
+   mov byte [char], 0
+   mov qword [curzor], (0xB8000 + 480)
    jmp testt
 idt:
 db 0
@@ -559,4 +589,7 @@ idttbl:
 dw 4095
 dq 0x80210
 head: db '+------------------------------------------------------------------------------+|                                 SofaOS X64                                   |+------------------------------------------------------------------------------+', 0
+ccnt: dq 0
+usert: db '(user)>', 0
+syst: db '//system//>', 0
 times 4096 - ($ - $$) db 0
