@@ -553,12 +553,14 @@ miguel:
    shr rax, 16
    mov [rdi + 8], eax
    mov dword [rdi + 12], 0x00000000
+   mov qword [cmdc], rbx
+   lidt [idttbl]
+   sti
+tets:
    mov rdx, usert
    xor rcx, rcx
    mov cl, 0x0A
    call cpritn
-   lidt [idttbl]
-   sti
 testt:
    mov dl, byte [char]
    cmp dl, 0
@@ -575,10 +577,35 @@ testt:
    mov byte [char], 0
    jmp testt
 eter:
-   call cls
+   mov qword rax, [curzor]
+   mov byte [rax + 1], 0x00
+   xor rax, rax
+   mov qword rax, [curzor]
+   sub rax, 0xB8000
+   xor rdx, rdx
+   mov rbx, 160
+   div rbx
+   add rax, 1
+   mul rbx
+   add rax, 0xB8000
+   mov qword [curzor], rax 
    mov byte [char], 0
-   mov qword [curzor], (0xB8000 + 480)
-   jmp testt
+   jmp systm
+systm:
+   mov rdx, syst
+   mov cl, 0x6A
+   call cpritn
+   xor rax, rax
+   mov qword rax, [curzor]
+   sub rax, 0xB8000
+   xor rdx, rdx
+   mov rbx, 160
+   div rbx
+   add rax, 1
+   mul rbx
+   add rax, 0xB8000
+   mov qword [curzor], rax
+   jmp tets
 idt:
 db 0
 shift: db 0
@@ -592,4 +619,5 @@ head: db '+---------------------------------------------------------------------
 ccnt: dq 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
+cmdc: dq 0
 times 4096 - ($ - $$) db 0
