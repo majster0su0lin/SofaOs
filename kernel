@@ -516,13 +516,32 @@ lop:
    add rax, 1
    jmp lop
 ngeer:
+   mov qword [curzor], (0xB8000 + 480)
+   ret
+cmper:
+   xor rcx, rcx
+   xor rdx, rdx
+   mov byte cl, [rax]
+   mov byte dl, [rbx]
+   cmp dl, 0
+   je sucend
+   cmp cl, dl
+   jne badd
+   add rax, 2
+   add rbx, 1
+   jmp cmper
+badd:
+   mov rax, 0
+   ret
+sucend:
+   mov rax, 1
    ret
 miguel:
    call cls
    mov qword [curzor], 0xB8000
    mov rdx, head
    xor rcx, rcx
-   mov cl, 0x4E
+   mov cl, 0x1F
    call cpritn
    mov al, 0x11
    out 0x20, al
@@ -561,6 +580,8 @@ tets:
    xor rcx, rcx
    mov cl, 0x0A
    call cpritn
+   mov qword rax, [curzor]
+   mov qword [cmdc], rax
 testt:
    mov dl, byte [char]
    cmp dl, 0
@@ -593,8 +614,13 @@ eter:
    jmp systm
 systm:
    mov rdx, syst
-   mov cl, 0x6A
+   mov cl, 0xC6
    call cpritn
+   mov rbx, clscm
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je clsdo
    xor rax, rax
    mov qword rax, [curzor]
    sub rax, 0xB8000
@@ -605,6 +631,9 @@ systm:
    mul rbx
    add rax, 0xB8000
    mov qword [curzor], rax
+   jmp tets
+clsdo:
+   call cls
    jmp tets
 idt:
 db 0
@@ -617,6 +646,7 @@ dw 4095
 dq 0x80210
 head: db '+------------------------------------------------------------------------------+|                                 SofaOS X64                                   |+------------------------------------------------------------------------------+', 0
 ccnt: dq 0
+clscm: db 'cls', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
 cmdc: dq 0
