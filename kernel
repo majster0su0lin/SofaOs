@@ -621,6 +621,21 @@ systm:
    call cmper
    cmp rax, 1
    je clsdo
+   mov rbx, hlpcm
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je helpdo
+   mov rbx, vercm
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je verdo
+   mov rbx, cred
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je creddo
    xor rax, rax
    mov qword rax, [curzor]
    sub rax, 0xB8000
@@ -635,6 +650,21 @@ systm:
 clsdo:
    call cls
    jmp tets
+helpdo:
+   mov rdx, hlptxt
+   mov cl, 0x07
+   call cpritn
+   jmp tets
+verdo:
+   mov rdx, vertxt
+   mov cl, 0x07
+   call cpritn
+   jmp tets
+creddo:
+   mov rdx, credtxt
+   mov cl, 0x07
+   call cpritn
+   jmp tets
 idt:
 db 0
 shift: db 0
@@ -645,6 +675,12 @@ idttbl:
 dw 4095
 dq 0x80210
 head: db '+------------------------------------------------------------------------------+|                                 SofaOS X64                                   |+------------------------------------------------------------------------------+', 0
+hlpcm: db 'help', 0
+vercm: db 'ver', 0
+cred: db 'credits', 0
+hlptxt: db 'commands: help = gives u help :>                                                          ver = shows curent version of sofaos                                            credits = tels u who made this os                          ', 0
+vertxt: db 'SofaOs 0.67                                                          ', 0
+credtxt: db 'i was made by scrt401                                                ', 0
 ccnt: dq 0
 clscm: db 'cls', 0
 usert: db '(user)>', 0
