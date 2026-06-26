@@ -544,6 +544,15 @@ lop:
    je ngeer
    add rax, 1
    jmp lop
+   xor rdx, rdx
+   mov rax, kniha
+   mov qword [relad], rax
+lup:
+   mov byte [rax], 0
+   add rax, 1
+   add rdx, 1
+   cmp rdx, 16000
+   jne lup
 ngeer:
    mov qword [curzor], (0xB8000 + 480)
    ret
