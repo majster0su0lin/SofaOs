@@ -132,6 +132,9 @@ ksnc:
    mov al, cl
    cmp rax, 0
    je err
+   movzx rbx, byte [spcbf]
+   cmp rbx, 1
+   je spcs
    cmp rax, 0xE0
    je special
    cmp rax, 0x1C
@@ -208,6 +211,27 @@ letters:
    je shftrel
    jmp norec
 err:
+   pop rbx
+   pop rcx
+   pop rax
+   mov byte [spcbf], 0
+   iretq
+spcs:
+   cmp rax, 0x48
+   je upar
+   cmp rax, 0x50
+   je downar
+   jmp err
+upar:
+   mov byte [char], '"'
+   mov byte [spcbf], 0
+   pop rbx
+   pop rcx
+   pop rax
+   iretq
+downar:
+   mov byte [char], "'"
+   mov byte [spcbf], 0
    pop rbx
    pop rcx
    pop rax
@@ -487,7 +511,12 @@ keyz:
    pop rax
    iretq
 special:
-   jmp err
+   mov byte [spcbf], 1
+   pop rbx
+   pop rcx
+   pop rax
+   iretq
+spcbf: db 0
 ent:
    mov byte [char], '*'
    pop rbx
@@ -573,6 +602,7 @@ miguel:
    mov [rdi + 8], eax
    mov dword [rdi + 12], 0x00000000
    mov qword [cmdc], rbx
+   mov qword [relad], kniha
    lidt [idttbl]
    sti
 tets:
@@ -588,6 +618,10 @@ testt:
    je testt
    cmp dl, '*'
    je eter
+   cmp dl, '"'
+   je upr
+   cmp dl, "'"
+   je dnr
    xor rax, rax
    mov qword rax, [curzor]
    mov byte [rax], dl
@@ -612,6 +646,70 @@ eter:
    mov qword [curzor], rax 
    mov byte [char], 0
    jmp systm
+upr:
+   mov rax, [relad]
+   cmp rax, kniha
+   je testt
+dnr:
+   mov rsi, (0xB8000 + 480)
+   mov rdi, mbf
+   xor rcx, rcx
+   xor rdx, rdx
+cplp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne cplp
+sfts:
+   mov rsi, (0xB8000 + 640)
+   mov rdi, (0xB8000 + 480)
+   xor rdx, rdx
+   xor rcx, rcx
+sftlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rdi, 1
+   add rsi, 1
+   cmp rdx, 3520
+   jne sftlp
+lstmv:
+   mov rsi, [relad]
+   mov rdi, (0xB8000 + 3840)
+   xor rdx, rdx
+   xor rcx, rcx
+lstlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne lstlp
+   mov rsi, mbf
+   mov rdi, [relad]
+   xor rdx, rdx
+   xor rcx, rcx
+svlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rdi, 1
+   add rsi, 1
+   cmp rdx, 160
+   jne svlp
+   mov qword [relad], rdi
+   mov byte [char], 0
+   mov qword rax, [cmdc]
+   mov qword rbx, [curzor]
+   sub rax, 160
+   sub rbx, 160
+   mov qword [cmdc], rax
+   mov qword [curzor], rbx
+   jmp testt
 systm:
    mov rdx, syst
    mov cl, 0xC6
@@ -686,4 +784,7 @@ clscm: db 'cls', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
 cmdc: dq 0
+relad: dq 0
 times 4096 - ($ - $$) db 0
+kniha equ 0x90000
+mbf equ 160
