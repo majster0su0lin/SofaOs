@@ -656,9 +656,66 @@ eter:
    mov byte [char], 0
    jmp systm
 upr:
-   mov rax, [relad]
-   cmp rax, kniha
-   je testt
+   mov rsi, (0xB8000 + 3840)
+   mov rdi, mbf
+   xor rcx, rcx
+   xor rdx, rdx
+copyp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne copyp
+shifter:
+   mov rsi, (0xB8000 + 4000)
+   mov rdi, (0xB8000 + 3840)
+   xor rdx, rdx
+   xor rcx, rcx
+shiflp:
+   add rdx, 1
+   mov cl, [rdi]
+   mov [rsi], cl
+   sub rdi, 1
+   sub rsi, 1
+   cmp rdx, 3520
+   jne shiflp
+fsmv:
+   mov rsi, [relad]
+   mov rdi, (0xB8000 + 480)
+   sub rsi, 160
+   mov [relad], rsi
+   xor rdx, rdx
+   xor rcx, rcx
+fsmlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne fsmlp
+   mov rsi, mbf
+   mov rdi, [relad]
+   xor rdx, rdx
+   xor rcx, rcx
+savlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rdi, 1
+   add rsi, 1
+   cmp rdx, 160
+   jne savlp
+   mov byte [char], 0
+   mov qword rax, [cmdc]
+   mov qword rbx, [curzor]
+   add rax, 160
+   add rbx, 160
+   mov qword [cmdc], rax
+   mov qword [curzor], rbx
+   jmp testt
 dnr:
    mov rsi, (0xB8000 + 480)
    mov rdi, mbf
