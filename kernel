@@ -120,6 +120,30 @@ looo:
 [bits 64]
 epstien:
    jmp miguel
+bintrn:
+   mov rbx, 10
+   xor rcx, rcx
+   mov r8, netanyahu
+   mov r9, rax
+idf:
+   xor rdx, rdx
+   add rcx, 1
+   div rbx
+   cmp rax, 0
+   jne idf
+   add r8, rcx
+   mov [r8], rax
+   mov rax, r9
+benjamin:
+   xor rdx, rdx
+   sub r8, 1
+   div rbx
+   add rdx, 48
+   mov byte [r8], dl
+   cmp rax, 0
+   jne benjamin
+   ret
+netanyahu: times 22 db 0
 ksnc:
    push rax
    push rcx
@@ -798,6 +822,11 @@ systm:
    call cmper
    cmp rax, 1
    je verdo
+   mov rbx, wht
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je whtdo
    mov rbx, cred
    mov rax, [cmdc]
    call cmper
@@ -865,6 +894,48 @@ cpri:
    jmp cpri
 nwlnr:
    jmp newliner
+whtdo:
+   mov rax, cr0
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr2
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka2
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr3
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka3
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr4
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka4
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr8
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka8
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
 idt:
 db 0
 shift: db 0
@@ -881,7 +952,13 @@ cred: db 'credits', 0
 hlptxt: db 'commands: help = gives u help :>                                                          ver = shows curent version of sofaos                                            credits = tels u who made this os                          ', 0
 vertxt: db 'SofaOs 0.67                                                          ', 0
 credtxt: db 'i was made by scrt401                                                ', 0
+wht: db 'whatincr', 0
 echcm: db 'saythis', 0
+ciarka: db ' in cr0,', 0
+ciarka2: db ' in cr2,', 0
+ciarka3: db ' in cr3,', 0
+ciarka4: db ' in cr4,', 0
+ciarka8: db ' in cr8,', 0
 ccnt: dq 0
 clscm: db 'cls', 0
 usert: db '(user)>', 0
