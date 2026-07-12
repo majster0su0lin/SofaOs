@@ -177,7 +177,7 @@ loaderror:
 DAP:
 db 16
 db 0
-dw 9
+dw 12
 dw 0x1000
 dw 0x0000
 dq 5
@@ -840,6 +840,12 @@ sucend:
    mov rax, 1
    ret
 miguel:
+   mov dx, 0x3D4
+   mov al, 0x0A
+   out dx, al
+   mov dx, 0x3d5
+   mov al, 0x20
+   out dx, al
    call cls
    mov qword [curzor], 0xB8000
    mov rdx, head
@@ -1045,11 +1051,13 @@ svlp:
    mov qword [curzor], rbx
    jmp testt
 gatherer:
+   xor r10, r10
    xor rax, rax
-   mov rbx, [curzor]
-   cmp byte [rdx + 1], 'x'
+   mov rbx, [cmdc]
+   add rbx, [clen]
+   cmp byte [rdx + 2], 'x'
    je itshex
-   cmp byte [rdx + 1], 'X'
+   cmp byte [rdx + 2], 'X'
    je itshex
    mov rcx, 10
    xor r8, r8
@@ -1057,7 +1065,9 @@ gatherer:
 getlp:
    cmp rdx, rbx
    je konex
-   mov r8, [rdx]
+   movzx r8, byte [rdx]
+   cmp r8, ' '
+   je andr
    cmp r8, 48
    jb sike
    cmp r8, 57
@@ -1076,10 +1086,13 @@ sike:
 itshex:
    add rdx, 4
    mov rcx, 16
+   mov r10, 1
 gtlp:
    cmp rdx, rbx
    je konex
-   mov r8, [rdx]
+   movzx r8, byte [rdx]
+   cmp r8, ' '
+   je andr
    cmp r8, 48
    jb sike
    cmp r8, 102
@@ -1134,6 +1147,9 @@ hee:
 hef:
    mov r8, 15
    jmp reter
+andr:
+   mov r9, 2
+   ret
 systm:
    mov rdx, syst
    mov cl, 0xC6
@@ -1173,6 +1189,16 @@ systm:
    call cmper
    cmp rax, 1
    je memfdo
+   mov rbx, tran
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je trando
+   mov rbx, memp
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je mmpdo
 newliner:
    xor rax, rax
    mov qword rax, [curzor]
@@ -1203,6 +1229,22 @@ creddo:
    mov cl, 0x07
    call cpritn
    jmp tets
+mmpdo:
+   mov rdx, [cmdc]
+   add rdx, 8
+   call gatherer
+   cmp r9, 2
+   jb sike
+   add rdx, 2
+   mov r15, rax
+   call gatherer
+   cmp r9, 1
+   je sike
+   mov [r15], rax
+   mov cl, 0x07
+   mov rdx, done
+   call cpritn
+   jmp newliner
 echdo:
    mov rax, [cmdc]
    add rax, 16
@@ -1228,6 +1270,23 @@ cpri:
    mov [curzor], rbx
    add rax, 2
    jmp cpri
+trando:
+   mov rdx, [cmdc]
+   add rdx, 20
+   call gatherer
+   cmp r9, 1
+   je errr
+   cmp r10, 1
+   je ijex
+   call hexbintrn
+   jmp cller
+ijex:
+   call bintrn
+cller:
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
 whtdo:
    mov rax, cr0
    call hexbintrn
@@ -1272,10 +1331,12 @@ whtdo:
    jmp newliner
 memfdo:
    mov rdx, [cmdc]
-   add rdx, 5
+   add rdx, 10
    call gatherer
    cmp r9, 1
    je errr
+   mov bl, byte [rax]
+   movzx rax, byte bl
    call hexbintrn
    mov rdx, netanyahu
    mov cl, 0x07
@@ -1299,7 +1360,7 @@ head: db '+---------------------------------------------------------------------
 hlpcm: db 'help', 0
 vercm: db 'ver', 0
 cred: db 'credits', 0
-hlptxt: db 'commands: help = gives u help :>                                                          ver = shows curent version of sofaos                                            credits = tels u who made this os                          ', 0
+hlptxt: db 'commands: help = gives u help :>                                                          ver = shows curent version of sofaos                                            credits = tels u who made this os                                               cls = clears the screen                                                         whatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8                             saythis = echoes back what u type after it                                      translate = converts hex number to decimal and back                             peek = shows u whats stored at a memory address                                 put = writes a value to a memory address                   ', 0
 vertxt: db 'SofaOs 0.67                                                          ', 0
 credtxt: db 'i was made by scrt401                                                ', 0
 wht: db 'whatincr', 0
@@ -1310,14 +1371,17 @@ ciarka3: db ' in cr3,', 0
 numer: db 'no idea what that number is', 0
 ciarka4: db ' in cr4,', 0
 memf: db 'peek', 0
+memp: db 'put', 0
 ciarka8: db ' in cr8,', 0
 ccnt: dq 0
+done: db 'Done', 0
 clscm: db 'cls', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
 clen: dq 0
 cmdc: dq 0
+tran: db 'translate', 0
 relad: dq 0
-times 4608 - ($ - $$) db 0
+times 6144 - ($ - $$) db 0
 kniha equ 0x90000
 mbf equ 160

@@ -954,6 +954,40 @@ hef:
 andr:
    mov r9, 2
    ret
+tim:
+   xor r9, r9
+   mov al, 0x0a
+   out 0x70, al
+   in al, 0x71
+   test al, 0x80
+   jnz tim
+   mov al, 0xb
+   out 0x70, al
+   in al, 0x71
+   test al, 0x4
+   jnz binry
+   mov r9, 1
+   binry:
+   xor rax, rax
+   xor rbx, rbx
+   xor rcx, rcx
+   xor rdx, rdx
+   mov al, 0x7
+   out 0x70, al
+   in al, 0x71
+   mov dl, al
+   mov al, 0x4
+   out 0x70, al
+   in al, 0x71
+   mov cl, al
+   mov al, 0x2
+   out 0x70, al
+   in al, 0x71										    
+   mov bl, al
+   mov al, 0
+   out 0x70, al
+   in al, 0x71
+   ret
 systm:
    mov rdx, syst
    mov cl, 0xC6
@@ -998,6 +1032,16 @@ systm:
    call cmper
    cmp rax, 1
    je trando
+   mov rbx, memp
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je mmpdo
+   mov rbx, time
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je tmdo
 newliner:
    xor rax, rax
    mov qword rax, [curzor]
@@ -1010,6 +1054,82 @@ newliner:
    add rax, 0xB8000
    mov qword [curzor], rax
    jmp tets
+tmdo:
+   call tim
+   cmp r9, 0
+   je bint
+   xor r13, r13
+   xor r12, r12
+   xor r11, r11
+   mov r11, rbx
+   mov r12, rcx
+   mov r13, rdx
+   call hexbintrn
+   mov rdx, netanyahu
+   add rdx, 16
+   mov cl, 0x7
+   call cpritn
+   mov rdx, crk
+   mov cl, 0x7
+   call cpritn
+   mov rax, r11
+   call hexbintrn
+   mov rdx, netanyahu
+   add rdx, 16
+   mov cl, 0x7
+   call cpritn
+   mov rdx, crk
+   mov cl, 0x7
+   call cpritn
+   mov rax, r12
+   call hexbintrn
+   mov rdx, netanyahu
+   add rdx, 16
+   mov cl, 0x7
+   call cpritn
+   mov rdx, crk
+   mov cl, 0x7
+   call cpritn
+   mov rax, r13
+   call hexbintrn
+   mov rdx, netanyahu
+   add rdx, 16
+   mov cl, 0x7
+   call cpritn
+   jmp newliner
+bint:
+   xor r11, r11
+   xor r12, r12
+   xor r13, r13
+   mov r11, rbx
+   mov r12, rcx
+   mov r13, rdx
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rax, r11
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, crk
+   mov cl, 0x7
+   call cpritn
+   mov rax, r12
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, crk
+   mov cl, 0x7
+   call cpritn
+   mov rax, r13
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   jmp newliner
 clsdo:
    call cls
    jmp tets
@@ -1028,6 +1148,22 @@ creddo:
    mov cl, 0x07
    call cpritn
    jmp tets
+mmpdo:
+   mov rdx, [cmdc]
+   add rdx, 8
+   call gatherer
+   cmp r9, 2
+   jb sike
+   add rdx, 2
+   mov r15, rax
+   call gatherer
+   cmp r9, 1
+   je sike
+   mov [r15], rax
+   mov cl, 0x07
+   mov rdx, done
+   call cpritn
+   jmp newliner
 echdo:
    mov rax, [cmdc]
    add rax, 16
@@ -1143,7 +1279,7 @@ head: db '+---------------------------------------------------------------------
 hlpcm: db 'help', 0
 vercm: db 'ver', 0
 cred: db 'credits', 0
-hlptxt: db 'commands: help = gives u help :>                                                          ver = shows curent version of sofaos                                            credits = tels u who made this os                          ', 0
+hlptxt: db 'commands: help = gives u help :>                                     ver = shows curent version of sofaos                                            credits = tels u who made this os                                               cls = clears the screen                                                         whatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8                             saythis = echoes back what u type after it                                      translate = converts hex number to decimal                                      peek = shows u whats stored at a memory address                                 put = writes a value to a memory address                                        ', 0
 vertxt: db 'SofaOs 0.67                                                          ', 0
 credtxt: db 'i was made by scrt401                                                ', 0
 wht: db 'whatincr', 0
@@ -1155,8 +1291,11 @@ numer: db 'no idea what that number is', 0
 ciarka4: db ' in cr4,', 0
 memf: db 'peek', 0
 memp: db 'put', 0
+time: db 'time', 0
+crk: db ':', 0
 ciarka8: db ' in cr8,', 0
 ccnt: dq 0
+done: db 'Done', 0
 clscm: db 'cls', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
@@ -1164,6 +1303,6 @@ clen: dq 0
 cmdc: dq 0
 tran: db 'translate', 0
 relad: dq 0
-times 5120 - ($ - $$) db 0
+times 6144 - ($ - $$) db 0
 kniha equ 0x90000
 mbf equ 160
