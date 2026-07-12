@@ -120,6 +120,57 @@ looo:
 [bits 64]
 epstien:
    jmp miguel
+hexbintrn:
+   mov byte [netanyahu], 48
+   mov byte [netanyahu + 1], 'x'
+   mov byte [netanyahu + 19], 0
+   mov r8, 18
+   mov r9, rax
+   mov rbx, 16
+hexbenjamin:
+   xor rax, rax
+   mov rax, r9
+   xor rdx, rdx
+   div rbx
+   mov r9, rax
+   mov rax, rdx
+   sub r8, 1
+   cmp rax, 10
+   je jea
+   cmp rax, 11
+   je jeb
+   cmp rax, 12
+   je jec
+   cmp rax, 13
+   je jed
+   cmp rax, 14
+   je jee
+   cmp rax, 15
+   je jef
+   add rax, 48
+hxlp:
+   mov byte [netanyahu + r8], al
+   cmp r8, 2
+   jne hexbenjamin
+   ret
+jea:
+   mov al, 'A'
+   jmp hxlp
+jeb:
+   mov al, 'B'
+   jmp hxlp
+jec:
+   mov al, 'C'
+   jmp hxlp
+jed:
+   mov al, 'D'
+   jmp hxlp
+jee:
+   mov al, 'E'
+   jmp hxlp
+jef:
+   mov al, 'F'
+   jmp hxlp
 bintrn:
    mov rbx, 10
    xor rcx, rcx
@@ -803,6 +854,106 @@ svlp:
    mov qword [cmdc], rax
    mov qword [curzor], rbx
    jmp testt
+gatherer:
+   xor r10, r10
+   xor rax, rax
+   mov rbx, [cmdc]
+   add rbx, [clen]
+   cmp byte [rdx + 2], 'x'
+   je itshex
+   cmp byte [rdx + 2], 'X'
+   je itshex
+   mov rcx, 10
+   xor r8, r8
+   xor r9, r9
+getlp:
+   cmp rdx, rbx
+   je konex
+   movzx r8, byte [rdx]
+   cmp r8, ' '
+   je andr
+   cmp r8, 48
+   jb sike
+   cmp r8, 57
+   ja sike
+   sub r8, 48
+   imul rax, rcx
+   add rax, r8
+   add rdx, 2
+   jmp getlp
+konex:
+   ret
+sike:
+   xor r9, r9
+   mov r9, 1
+   ret
+itshex:
+   add rdx, 4
+   mov rcx, 16
+   mov r10, 1
+gtlp:
+   cmp rdx, rbx
+   je konex
+   movzx r8, byte [rdx]
+   cmp r8, ' '
+   je andr
+   cmp r8, 48
+   jb sike
+   cmp r8, 102
+   ja sike
+   cmp r8, 'a'
+   je hea
+   cmp r8, 'A'
+   je hea
+   cmp r8, 'b'
+   je heb
+   cmp r8, 'B'
+   je heb
+   cmp r8, 'c'
+   je hec
+   cmp r8, 'C'
+   je hec
+   cmp r8, 'd'
+   je hed
+   cmp r8, 'D'
+   je hed
+   cmp r8, 'e'
+   je hee
+   cmp r8, 'E'
+   je hee
+   cmp r8, 'f'
+   je hef
+   cmp r8, 'F'
+   je hef
+   cmp r8, 57
+   ja sike
+   sub r8, 48
+reter:
+   imul rax, rcx
+   add rax, r8
+   add rdx, 2
+   jmp gtlp
+hea:
+   mov r8, 10
+   jmp reter
+heb:
+   mov r8, 11
+   jmp reter
+hec:
+   mov r8, 12
+   jmp reter
+hed:
+   mov r8, 13
+   jmp reter
+hee:
+   mov r8, 14
+   jmp reter
+hef:
+   mov r8, 15
+   jmp reter
+andr:
+   mov r9, 2
+   ret
 systm:
    mov rdx, syst
    mov cl, 0xC6
@@ -837,6 +988,16 @@ systm:
    call cmper
    cmp rax, 1
    je echdo
+   mov rbx, memf
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je memfdo
+   mov rbx, tran
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je trando
 newliner:
    xor rax, rax
    mov qword rax, [curzor]
@@ -887,16 +1048,31 @@ cpri:
    mov byte [rbx], cl
    mov byte [rbx + 1], 0x07
    cmp r8, rdx
-   je nwlnr
+   je newliner
    add rbx, 2
    mov [curzor], rbx
    add rax, 2
    jmp cpri
-nwlnr:
+trando:
+   mov rdx, [cmdc]
+   add rdx, 20
+   call gatherer
+   cmp r9, 1
+   je errr
+   cmp r10, 1
+   je ijex
+   call hexbintrn
+   jmp cller
+ijex:
+   call bintrn
+cller:
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
    jmp newliner
 whtdo:
    mov rax, cr0
-   call bintrn
+   call hexbintrn
    mov rdx, netanyahu
    mov cl, 0x07
    call cpritn
@@ -904,7 +1080,7 @@ whtdo:
    mov cl, 0x07
    call cpritn
    mov rax, cr2
-   call bintrn
+   call hexbintrn
    mov rdx, netanyahu
    mov cl, 0x07
    call cpritn
@@ -912,7 +1088,7 @@ whtdo:
    mov cl, 0x07
    call cpritn
    mov rax, cr3
-   call bintrn
+   call hexbintrn
    mov rdx, netanyahu
    mov cl, 0x07
    call cpritn
@@ -920,7 +1096,7 @@ whtdo:
    mov cl, 0x07
    call cpritn
    mov rax, cr4
-   call bintrn
+   call hexbintrn
    mov rdx, netanyahu
    mov cl, 0x07
    call cpritn
@@ -928,11 +1104,29 @@ whtdo:
    mov cl, 0x07
    call cpritn
    mov rax, cr8
-   call bintrn
+   call hexbintrn
    mov rdx, netanyahu
    mov cl, 0x07
    call cpritn
    mov rdx, ciarka8
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
+memfdo:
+   mov rdx, [cmdc]
+   add rdx, 10
+   call gatherer
+   cmp r9, 1
+   je errr
+   mov bl, byte [rax]
+   movzx rax, byte bl
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
+errr:
+   mov rdx, numer
    mov cl, 0x07
    call cpritn
    jmp newliner
@@ -957,7 +1151,10 @@ echcm: db 'saythis', 0
 ciarka: db ' in cr0,', 0
 ciarka2: db ' in cr2,', 0
 ciarka3: db ' in cr3,', 0
+numer: db 'no idea what that number is', 0
 ciarka4: db ' in cr4,', 0
+memf: db 'peek', 0
+memp: db 'put', 0
 ciarka8: db ' in cr8,', 0
 ccnt: dq 0
 clscm: db 'cls', 0
@@ -965,7 +1162,8 @@ usert: db '(user)>', 0
 syst: db '//system//>', 0
 clen: dq 0
 cmdc: dq 0
+tran: db 'translate', 0
 relad: dq 0
-times 4096 - ($ - $$) db 0
+times 5120 - ($ - $$) db 0
 kniha equ 0x90000
 mbf equ 160
