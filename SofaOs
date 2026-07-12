@@ -177,7 +177,7 @@ loaderror:
 DAP:
 db 16
 db 0
-dw 8
+dw 9
 dw 0x1000
 dw 0x0000
 dq 5
@@ -310,6 +310,81 @@ looo:
 [bits 64]
 epstien:
    jmp miguel
+hexbintrn:
+   mov byte [netanyahu], 48
+   mov byte [netanyahu + 1], 'x'
+   mov byte [netanyahu + 19], 0
+   mov r8, 18
+   mov r9, rax
+   mov rbx, 16
+hexbenjamin:
+   xor rax, rax
+   mov rax, r9
+   xor rdx, rdx
+   div rbx
+   mov r9, rax
+   mov rax, rdx
+   sub r8, 1
+   cmp rax, 10
+   je jea
+   cmp rax, 11
+   je jeb
+   cmp rax, 12
+   je jec
+   cmp rax, 13
+   je jed
+   cmp rax, 14
+   je jee
+   cmp rax, 15
+   je jef
+   add rax, 48
+hxlp:
+   mov byte [netanyahu + r8], al
+   cmp r8, 2
+   jne hexbenjamin
+   ret
+jea:
+   mov al, 'A'
+   jmp hxlp
+jeb:
+   mov al, 'B'
+   jmp hxlp
+jec:
+   mov al, 'C'
+   jmp hxlp
+jed:
+   mov al, 'D'
+   jmp hxlp
+jee:
+   mov al, 'E'
+   jmp hxlp
+jef:
+   mov al, 'F'
+   jmp hxlp
+bintrn:
+   mov rbx, 10
+   xor rcx, rcx
+   mov r8, netanyahu
+   mov r9, rax
+idf:
+   xor rdx, rdx
+   add rcx, 1
+   div rbx
+   cmp rax, 0
+   jne idf
+   add r8, rcx
+   mov [r8], rax
+   mov rax, r9
+benjamin:
+   xor rdx, rdx
+   sub r8, 1
+   div rbx
+   add rdx, 48
+   mov byte [r8], dl
+   cmp rax, 0
+   jne benjamin
+   ret
+netanyahu: times 22 db 0
 ksnc:
    push rax
    push rcx
@@ -322,7 +397,7 @@ ksnc:
    mov al, cl
    cmp rax, 0
    je err
-   mov rbx, [spcbf]
+   movzx rbx, byte [spcbf]
    cmp rbx, 1
    je spcs
    cmp rax, 0xE0
@@ -404,18 +479,27 @@ err:
    pop rbx
    pop rcx
    pop rax
+   mov byte [spcbf], 0
    iretq
 spcs:
-   cmp rax, 48
+   cmp rax, 0x48
    je upar
-   cmp rax, 50
+   cmp rax, 0x50
    je downar
    jmp err
 upar:
    mov byte [char], '"'
+   mov byte [spcbf], 0
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 downar:
    mov byte [char], "'"
+   mov byte [spcbf], 0
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 num:
    sub rax, 1
@@ -693,6 +777,9 @@ keyz:
    iretq
 special:
    mov byte [spcbf], 1
+   pop rbx
+   pop rcx
+   pop rax
    iretq
 spcbf: db 0
 ent:
@@ -722,6 +809,15 @@ lop:
    je ngeer
    add rax, 1
    jmp lop
+   xor rdx, rdx
+   mov rax, kniha
+   mov qword [relad], rax
+lup:
+   mov byte [rax], 0
+   add rax, 1
+   add rdx, 1
+   cmp rdx, 16000
+   jne lup
 ngeer:
    mov qword [curzor], (0xB8000 + 480)
    ret
@@ -811,6 +907,9 @@ testt:
    jmp testt
 eter:
    mov qword rax, [curzor]
+   sub rax, [cmdc]
+   mov [clen], rax
+   mov qword rax, [curzor]
    mov byte [rax + 1], 0x00
    xor rax, rax
    mov qword rax, [curzor]
@@ -825,51 +924,216 @@ eter:
    mov byte [char], 0
    jmp systm
 upr:
-   mov rax, [relad]
-   cmp rax, kniha
-   je testt
-dnr:
-   mov rax, [relad]
-   add rax, 4000
-   mov rbx, kniha
-   add rbx, 16000
-   cmp rax, rbx
-   je testt
-   mov [relad], rbx
-   mov rax, (0xB8000 + 480)
-   mov rbx, [relad]
-   xor rdx, rdx
-dnlp:
-   add rdx, 1
+   mov rsi, (0xB8000 + 3840)
+   mov rdi, mbf
    xor rcx, rcx
-   mov rcx, [rax]
-   mov [rbx], rcx
-   add rax, 1
-   add rbx, 1
-   cmp rdx, 180
-   jne dnlp
    xor rdx, rdx
-dnlpii:
+copyp:
    add rdx, 1
-   mov rbx, (0xB8000 + 480)
-   mov rcx, [rax]
-   mov [rbx], rcx
-   add rax, 1
-   add rbx, 1
-   cmp rdx, 3520
-   jne dnlpii
-   mov rbx, relad
-   mov rax, (0xB8000 + 3840)
-   xor rdx, rdx
-dnlpiii:
-   add rdx, 1
-   mov rcx, [rbx]
-   mov [rax], rcx
-   add rax, 1
-   add rbx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
    cmp rdx, 160
-   jne dnlpiii
+   jne copyp
+shifter:
+   mov rsi, (0xB8000 + 4000)
+   mov rdi, (0xB8000 + 3840)
+   xor rdx, rdx
+   xor rcx, rcx
+shiflp:
+   add rdx, 1
+   mov cl, [rdi]
+   mov [rsi], cl
+   sub rdi, 1
+   sub rsi, 1
+   cmp rdx, 3520
+   jne shiflp
+fsmv:
+   mov rsi, [relad]
+   mov rdi, (0xB8000 + 480)
+   sub rsi, 160
+   mov [relad], rsi
+   xor rdx, rdx
+   xor rcx, rcx
+fsmlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne fsmlp
+   mov rsi, mbf
+   mov rdi, [relad]
+   xor rdx, rdx
+   xor rcx, rcx
+savlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rdi, 1
+   add rsi, 1
+   cmp rdx, 160
+   jne savlp
+   mov byte [char], 0
+   mov qword rax, [cmdc]
+   mov qword rbx, [curzor]
+   add rax, 160
+   add rbx, 160
+   mov qword [cmdc], rax
+   mov qword [curzor], rbx
    jmp testt
+dnr:
+   mov rsi, (0xB8000 + 480)
+   mov rdi, mbf
+   xor rcx, rcx
+   xor rdx, rdx
+cplp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne cplp
+sfts:
+   mov rsi, (0xB8000 + 640)
+   mov rdi, (0xB8000 + 480)
+   xor rdx, rdx
+   xor rcx, rcx
+sftlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rdi, 1
+   add rsi, 1
+   cmp rdx, 3520
+   jne sftlp
+lstmv:
+   mov rsi, [relad]
+   mov rdi, (0xB8000 + 3840)
+   xor rdx, rdx
+   xor rcx, rcx
+lstlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rsi, 1
+   add rdi, 1
+   cmp rdx, 160
+   jne lstlp
+   mov rsi, mbf
+   mov rdi, [relad]
+   xor rdx, rdx
+   xor rcx, rcx
+svlp:
+   add rdx, 1
+   mov cl, [rsi]
+   mov [rdi], cl
+   add rdi, 1
+   add rsi, 1
+   cmp rdx, 160
+   jne svlp
+   mov qword [relad], rdi
+   mov byte [char], 0
+   mov qword rax, [cmdc]
+   mov qword rbx, [curzor]
+   sub rax, 160
+   sub rbx, 160
+   mov qword [cmdc], rax
+   mov qword [curzor], rbx
+   jmp testt
+gatherer:
+   xor rax, rax
+   mov rbx, [curzor]
+   cmp byte [rdx + 1], 'x'
+   je itshex
+   cmp byte [rdx + 1], 'X'
+   je itshex
+   mov rcx, 10
+   xor r8, r8
+   xor r9, r9
+getlp:
+   cmp rdx, rbx
+   je konex
+   mov r8, [rdx]
+   cmp r8, 48
+   jb sike
+   cmp r8, 57
+   ja sike
+   sub r8, 48
+   imul rax, rcx
+   add rax, r8
+   add rdx, 2
+   jmp getlp
+konex:
+   ret
+sike:
+   xor r9, r9
+   mov r9, 1
+   ret
+itshex:
+   add rdx, 4
+   mov rcx, 16
+gtlp:
+   cmp rdx, rbx
+   je konex
+   mov r8, [rdx]
+   cmp r8, 48
+   jb sike
+   cmp r8, 102
+   ja sike
+   cmp r8, 'a'
+   je hea
+   cmp r8, 'A'
+   je hea
+   cmp r8, 'b'
+   je heb
+   cmp r8, 'B'
+   je heb
+   cmp r8, 'c'
+   je hec
+   cmp r8, 'C'
+   je hec
+   cmp r8, 'd'
+   je hed
+   cmp r8, 'D'
+   je hed
+   cmp r8, 'e'
+   je hee
+   cmp r8, 'E'
+   je hee
+   cmp r8, 'f'
+   je hef
+   cmp r8, 'F'
+   je hef
+   cmp r8, 57
+   ja sike
+   sub r8, 48
+reter:
+   imul rax, rcx
+   add rax, r8
+   add rdx, 2
+   jmp gtlp
+hea:
+   mov r8, 10
+   jmp reter
+heb:
+   mov r8, 11
+   jmp reter
+hec:
+   mov r8, 12
+   jmp reter
+hed:
+   mov r8, 13
+   jmp reter
+hee:
+   mov r8, 14
+   jmp reter
+hef:
+   mov r8, 15
+   jmp reter
 systm:
    mov rdx, syst
    mov cl, 0xC6
@@ -889,11 +1153,27 @@ systm:
    call cmper
    cmp rax, 1
    je verdo
+   mov rbx, wht
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je whtdo
    mov rbx, cred
    mov rax, [cmdc]
    call cmper
    cmp rax, 1
    je creddo
+   mov rbx, echcm
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je echdo
+   mov rbx, memf
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je memfdo
+newliner:
    xor rax, rax
    mov qword rax, [curzor]
    sub rax, 0xB8000
@@ -923,6 +1203,89 @@ creddo:
    mov cl, 0x07
    call cpritn
    jmp tets
+echdo:
+   mov rax, [cmdc]
+   add rax, 16
+   mov rax, [clen]
+   xor rdx, rdx
+   mov rcx, 2
+   div rcx
+   mov rdx, rax
+   sub rdx, 8
+   mov rax, [cmdc]
+   add rax, 16
+   xor rcx, rcx
+   xor r8, r8
+cpri:
+   add r8, 1
+   mov byte cl, [rax]
+   mov rbx, [curzor]
+   mov byte [rbx], cl
+   mov byte [rbx + 1], 0x07
+   cmp r8, rdx
+   je newliner
+   add rbx, 2
+   mov [curzor], rbx
+   add rax, 2
+   jmp cpri
+whtdo:
+   mov rax, cr0
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr2
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka2
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr3
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka3
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr4
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka4
+   mov cl, 0x07
+   call cpritn
+   mov rax, cr8
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka8
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
+memfdo:
+   mov rdx, [cmdc]
+   add rdx, 5
+   call gatherer
+   cmp r9, 1
+   je errr
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
+errr:
+   mov rdx, numer
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
 idt:
 db 0
 shift: db 0
@@ -939,11 +1302,22 @@ cred: db 'credits', 0
 hlptxt: db 'commands: help = gives u help :>                                                          ver = shows curent version of sofaos                                            credits = tels u who made this os                          ', 0
 vertxt: db 'SofaOs 0.67                                                          ', 0
 credtxt: db 'i was made by scrt401                                                ', 0
+wht: db 'whatincr', 0
+echcm: db 'saythis', 0
+ciarka: db ' in cr0,', 0
+ciarka2: db ' in cr2,', 0
+ciarka3: db ' in cr3,', 0
+numer: db 'no idea what that number is', 0
+ciarka4: db ' in cr4,', 0
+memf: db 'peek', 0
+ciarka8: db ' in cr8,', 0
 ccnt: dq 0
 clscm: db 'cls', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
+clen: dq 0
 cmdc: dq 0
 relad: dq 0
-kniha: db 0
-times 4096 - ($ - $$) db 0
+times 4608 - ($ - $$) db 0
+kniha equ 0x90000
+mbf equ 160
