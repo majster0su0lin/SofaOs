@@ -599,6 +599,8 @@ ent:
    pop rax
    iretq
 cpritn:
+   mov r14, 1
+cpritnn:
    mov byte al, [rdx]
    cmp al, 0
    je ced
@@ -608,8 +610,19 @@ cpritn:
    add rbx, 2
    mov [curzor], rbx
    add rdx, 1
-   jmp cpritn
+   cmp rbx, 0xb8f9f
+   jna plees
+   push rcx
+   push rdx
+   call dnr
+   pop rdx
+   pop rcx
+plees:
+   mov r10, rcx
+   mov r11, rdx
+   jmp cpritnn
 ced:
+   xor r14, r14
    ret
 cls:
    mov rax, (0xB8000 + 480)
@@ -650,6 +663,16 @@ sucend:
    mov rax, 1
    ret
 miguel:
+   xor rdx, rdx
+   xor rax, rax
+   mov dx, 0x3d4
+   mov al, 0xa
+   out dx, al
+   xor rax, rax
+   xor rdx, rdx
+   mov dx, 0x3d5
+   mov al, 0x20
+   out dx, al
    call cls
    mov qword [curzor], 0xB8000
    mov rdx, head
@@ -689,6 +712,8 @@ miguel:
    mov qword [relad], kniha
    lidt [idttbl]
    sti
+   mov rax, (tets + 5)
+   mov [1], rax
 tets:
    mov rdx, usert
    xor rcx, rcx
@@ -700,20 +725,40 @@ testt:
    mov dl, byte [char]
    cmp dl, 0
    je testt
-   cmp dl, '*'
-   je eter
    cmp dl, '"'
    je upr
    cmp dl, "'"
    je dnr
    xor rax, rax
    mov qword rax, [curzor]
+   cmp rax, 0xb8fa0
+   ja panic
+   cmp rax, 0xb8000 + 480
+   jb pann
+   cmp dl, "*"
+   je eter
    mov byte [rax], dl
    mov byte [rax + 1], 0x07
    add qword rax, 2
    mov qword [curzor], rax
    mov byte [rax +1], 0x70
    mov byte [char], 0
+   jmp testt
+pann:
+   mov r14, 1
+   call upr
+   mov rax, qword [curzor]
+   cmp rax, 0xB81E0
+   jb pann
+   xor r14, r14
+   jmp testt
+panic:
+   mov r14, 1
+   call dnr
+   mov rax, qword [curzor]
+   cmp rax, 0xB8fa0
+   ja panic
+   xor r14, r14
    jmp testt
 eter:
    mov qword rax, [curzor]
@@ -734,6 +779,10 @@ eter:
    mov byte [char], 0
    jmp systm
 upr:
+   mov rax, r8
+   mov rbx, r9
+   mov rcx, r10
+   mov rdx, r11
    mov rsi, (0xB8000 + 3840)
    mov rdi, mbf
    xor rcx, rcx
@@ -793,7 +842,12 @@ savlp:
    add rbx, 160
    mov qword [cmdc], rax
    mov qword [curzor], rbx
+   cmp r14, 1
+   je cal
+   mov byte [char], 0
    jmp testt
+cal:
+   ret
 dnr:
    mov rsi, (0xB8000 + 480)
    mov rdi, mbf
@@ -846,14 +900,18 @@ svlp:
    cmp rdx, 160
    jne svlp
    mov qword [relad], rdi
-   mov byte [char], 0
    mov qword rax, [cmdc]
    mov qword rbx, [curzor]
    sub rax, 160
    sub rbx, 160
    mov qword [cmdc], rax
    mov qword [curzor], rbx
+   mov byte [char], 0
+   cmp r14, 1
+   je col
    jmp testt
+col:
+   ret
 gatherer:
    xor r10, r10
    xor rax, rax
@@ -1301,6 +1359,7 @@ usert: db '(user)>', 0
 syst: db '//system//>', 0
 clen: dq 0
 cmdc: dq 0
+chat: db 0
 tran: db 'translate', 0
 relad: dq 0
 times 6144 - ($ - $$) db 0
