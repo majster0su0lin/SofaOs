@@ -119,7 +119,163 @@ looo:
    jmp CODE67_SEG:epstien
 [bits 64]
 epstien:
+   xor al, al
+   xor dl, dl
+   xor r15, r15
+   xor cl, cl
+   xor bl, bl
+   xor r9, r9
+   mov r9b, 1
+   mov r12, hlpg
+strg:
+   mov byte [0xb8000], 'q'
+   mov byte [0xb8001], 0x7
+   xor r11d, r11d
+   xor r8, r8
+   movzx r10d, r9b
+   shl r10d, 31
+   movzx r8d, al
+   shl r8d, 16
+   or r8d, r10d
+   xor r10, r10
+   movzx r10, bl
+   shl r10d, 11
+   or r8d, r10d
+   xor r10, r10
+   movzx r10d, cl
+   shl r10d, 8
+   or r8d, r10d
+   xor r10, r10
+   mov r13b, al
+   xor rax,rax
+   mov dx, 0xcf8
+   mov eax, r8d
+   out dx, eax
+   xor rax, rax
+   mov dx, 0xcfc
+   in eax, dx
+   mov r11d, eax
+   xor rax, rax
+   mov al, r13b
+   add cl, 1
+   cmp cl, 8
+   je tobl
+bc:
+   cmp bl, 32
+   je toal
+ac:
+   cmp r11d, 0xffffffff
+   je strg
+   mov [r12], r8d
+   add r12, 4
+   mov [r12], r11d
+   jmp ttwo
+tt:
+   add r12, 4
+   mov byte [0xb8002], 'e'
+   mov byte [0xb8003], 0x7
+   add r15, 1
+   jmp strg
+tobl:
+   xor cl, cl
+   add bl, 1
+   jmp bc
+toal:
+   cmp al, 255
+   je steb
+   xor bl, bl
+   add al, 1
+   jmp ac
+steb:
+   mov qword [count], r15
+   mov rax, [savior]
+   and rax, 0xFFFFFFF0
+   add rax, 0x118
+   mov ebx, [rax]
+   shr ebx, 1
+   shl ebx, 1
+   mov [rax], ebx
+walt:
+   mov ebx, [rax]
+   bt ebx, 15
+   jc walt
+   mov ebx, [rax]
+   btr ebx, 4
+   mov [rax], ebx
+aaah:
+   mov ebx, [rax]
+   bt ebx, 14
+   jc aaah
+   mov rax, 0x79fff
+zot:
+   add rax, 1
+   mov byte [rax], 0
+   cmp rax, 0x7a4ff
+   jne zot
+   mov rax, qword [savior]
+   and rax, 0xFFFFFFF0
+   mov rbx, rax
+   add rax, 0x100
+   mov dword [rax], 0x7a000
+   add rax, 0x4
+   mov dword [rax], 0
+   add rax, 0x4
+   mov dword [rax], 0x7a400
+   add rbx, 0x10c
+   mov dword [rbx], 0
+   sub rbx, 0x10c
+   add rbx, 0x118
+   mov ecx, [rbx]
+   mov edx, 1
+   shl edx, 4
+   or ecx, edx
+   mov [rbx], ecx
+   mov byte [17], 69
    jmp miguel
+tte:
+   pop rax
+   pop rbx
+   jmp tt
+ttwo:
+   mov r14d, 0x8
+   push rbx
+   mov ebx, r8d
+   or r8d, r14d
+   push rax
+   xor rax, rax
+   mov eax, r8d
+   mov dx, 0xcf8
+   out dx, eax
+   mov dx, 0xcfc
+   in eax, dx
+   mov r14d, eax
+   shr eax, 24
+   cmp eax, 1
+   jne tte
+   mov eax, r14d
+   shr eax, 16
+   and eax, 0xff
+   cmp eax, 0x6
+   jne tte
+   mov eax, r14d
+   shl eax, 16
+   shr eax, 24
+   cmp eax, 0x1
+   jne tte
+   mov r14d, 0x24
+   mov eax, ebx
+   or eax, r14d
+   mov dx, 0xcf8
+   out dx, eax
+   mov dx, 0xcfc
+   in eax, dx
+   mov [savior], eax
+   pop rax
+   pop rbx
+   mov byte [16], 67
+   jmp tt
+savior: dq 0
+count: dq 0
 hexbintrn:
    mov byte [netanyahu], 48
    mov byte [netanyahu + 1], 'x'
@@ -712,8 +868,8 @@ miguel:
    mov qword [relad], kniha
    lidt [idttbl]
    sti
-   mov rax, (tets + 5)
-   mov [1], rax
+   mov rax, savior
+   mov [0], rax
 tets:
    mov rdx, usert
    xor rcx, rcx
@@ -946,6 +1102,7 @@ sike:
    mov r9, 1
    ret
 itshex:
+   xor r9, r9
    add rdx, 4
    mov rcx, 16
    mov r10, 1
@@ -1100,6 +1257,11 @@ systm:
    call cmper
    cmp rax, 1
    je tmdo
+   mov rbx, wdr
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je debdo
 newliner:
    xor rax, rax
    mov qword rax, [curzor]
@@ -1306,6 +1468,56 @@ whtdo:
    mov cl, 0x07
    call cpritn
    jmp newliner
+debdo:
+   mov rax, dr0
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarkad
+   mov cl, 0x07
+   call cpritn
+   mov rax, dr1
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka1d
+   mov cl, 0x07
+   call cpritn
+   mov rax, dr2
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka2d
+   mov cl, 0x07
+   call cpritn
+   mov rax, dr3
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka3d
+   mov cl, 0x07
+   call cpritn
+   mov rax, dr6
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka6d
+   mov cl, 0x07
+   call cpritn
+   mov rax, dr7
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x07
+   call cpritn
+   mov rdx, ciarka7d
+   mov cl, 0x07
+   call cpritn
+   jmp newliner
 memfdo:
    mov rdx, [cmdc]
    add rdx, 10
@@ -1355,13 +1567,21 @@ ciarka8: db ' in cr8,', 0
 ccnt: dq 0
 done: db 'Done', 0
 clscm: db 'cls', 0
+wdr: db 'whatindr', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
 clen: dq 0
 cmdc: dq 0
 chat: db 0
+ciarkad: db ' in dr0,', 0
+ciarka1d: db ' in dr1,', 0
+ciarka2d: db ' in dr2,', 0
+ciarka3d: db ' in dr3,', 0
+ciarka6d: db ' in dr6,', 0
+ciarka7d: db ' in dr7', 0
 tran: db 'translate', 0
 relad: dq 0
-times 6144 - ($ - $$) db 0
+times 7168 - ($ - $$) db 0
 kniha equ 0x90000
 mbf equ 160
+hlpg: times 4096 db 0 
