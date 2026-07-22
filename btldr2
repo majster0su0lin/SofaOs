@@ -69,7 +69,7 @@ loaderror:
 DAP:
 db 16
 db 0
-dw 12
+dw 14
 dw 0x1000
 dw 0x0000
 dq 5
