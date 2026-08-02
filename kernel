@@ -69,6 +69,8 @@ pamet: dw 0
 pamet2: dw 0
 fnl32b:
 [bits 32]
+   mov byte [0xb800c], 'F'
+   mov byte [0xb800d], 0x0F
    mov ax, DATA_SEG
    mov ds, ax
    mov es, ax
@@ -119,6 +121,8 @@ looo:
    jmp CODE67_SEG:epstien
 [bits 64]
 epstien:
+   mov byte [0xb8000], 'e'
+   mov byte [0xb8001], 0x07
    xor al, al
    xor dl, dl
    xor r15, r15
@@ -172,7 +176,7 @@ ac:
    jmp ttwo
 tt:
    add r12, 4
-   mov byte [0xb8002], 'e'
+   mov byte [0xb8002], 'd'
    mov byte [0xb8003], 0x7
    add r15, 1
    jmp strg
@@ -187,6 +191,8 @@ toal:
    add al, 1
    jmp ac
 steb:
+   mov byte [0xb8002], 'd'
+   mov byte [0xb8003], 0x07
    mov qword [count], r15
    mov rax, [savior]
    and rax, 0xFFFFFFF0
@@ -231,7 +237,69 @@ zot:
    or ecx, edx
    mov [rbx], ecx
    mov byte [17], 69
+   xor rax, rax
+   mov byte [0xb8004], '1'
+   mov byte [0xb8005], 0x07
+   call drs
    jmp miguel
+drs:
+   mov byte [0x7a000], 5
+   mov byte [0x7a001], 0
+   mov word [0x7a002], 1
+   mov dword [0x7a004], 0
+   mov dword [0x7a008], 0x7a500
+   mov dword [0x7a00c], 0
+   mov rdx, 0x7a500
+zrr:
+   mov byte [rdx], 0
+   cmp rdx, 0x7a590
+   je zre
+   add rdx, 1
+   jmp zrr
+   mov byte [0xb8008], '3'
+   mov byte [0xb8009], 0x07
+zre:
+   mov byte [0x7a500], 0x27
+   mov byte [0x7a501], 0x80
+   mov byte [0x7a502], 0x25
+   mov byte [0x7a507], 0x40
+   mov byte [0x7a504], al
+   shr rax, 8
+   mov byte [0x7a505], al
+   shr rax, 8
+   mov byte [0x7a506], al
+   shr rax, 8
+   mov byte [0x7a508], al
+   shr rax, 8
+   mov byte [0x7a509], al
+   shr rax, 8
+   mov byte [0x7a50a], al
+   mov byte [0x7a50c], 1
+   mov byte [0x7a50d], 0
+   mov dword [0x7a580], 0x7b000
+   mov dword [0x7a584], 0
+   mov dword [0x7a588], 0
+   mov eax, 511
+   mov ebx, 1
+   shl ebx, 31
+   or eax, ebx
+   mov dword [0x7a58c], eax
+   mov rax, qword [savior]
+   and rax, 0xfffffff0
+   add rax, 0x100
+   mov rbx, rax
+   add rbx, 0x38
+   add rax, 0x18
+   mov edx, [rax]
+   bts edx, 0
+   mov [rax], edx
+   mov ecx, 1
+   mov dword [rbx], ecx
+aah_i_have_an_head_ache_from_writing_this_shit:
+   mov ecx, [rbx]
+   bt ecx, 0
+   jc aah_i_have_an_head_ache_from_writing_this_shit
+   ret
 tte:
    pop rax
    pop rbx
@@ -273,7 +341,7 @@ ttwo:
    pop rax
    pop rbx
    mov byte [16], 67
-   jmp tt
+   jmp steb
 savior: dq 0
 count: dq 0
 hexbintrn:
@@ -1262,6 +1330,11 @@ systm:
    call cmper
    cmp rax, 1
    je debdo
+   mov rbx, reds
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je rdsdo
 newliner:
    xor rax, rax
    mov qword rax, [curzor]
@@ -1353,6 +1426,29 @@ bint:
 clsdo:
    call cls
    jmp tets
+rdsdo:
+   mov rdx, [cmdc]
+   add rdx, 10
+   call gatherer
+   call drs
+   xor r14, r14
+   mov r14, 0x7b000
+dtp:
+   movzx rax, byte [r14]
+   call bintrn
+   push r14
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, medz
+   mov cl, 0x7
+   call cpritn
+   pop r14
+   add r14, 1
+   cmp r14, 0x7b200
+   je newliner
+   jmp dtp
+medz: db ' ', 0
 helpdo:
    mov rdx, hlptxt
    mov cl, 0x07
@@ -1570,6 +1666,7 @@ clscm: db 'cls', 0
 wdr: db 'whatindr', 0
 usert: db '(user)>', 0
 syst: db '//system//>', 0
+reds: db 'secr', 0
 clen: dq 0
 cmdc: dq 0
 chat: db 0
@@ -1581,7 +1678,7 @@ ciarka6d: db ' in dr6,', 0
 ciarka7d: db ' in dr7', 0
 tran: db 'translate', 0
 relad: dq 0
-times 7168 - ($ - $$) db 0
+times 8192 - ($ - $$) db 0
 kniha equ 0x90000
 mbf equ 160
 hlpg: times 4096 db 0 
