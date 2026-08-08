@@ -1700,7 +1700,7 @@ nextwak:
    cmp dword [rdx],'XSDT'
    jne crash
    xor rax, rax
-   mov eax, dword [rdx + 4]
+   mov rax, dword [rdx + 4]
    sub rax, 36
    shr rax, 3
    mov r8, rdx
@@ -1714,8 +1714,8 @@ xls:
 rads:
    cmp dword [rbx], 'RSDT'
    jne crash
-   xor rax, rax
-   mov eax, dword [rbx + 4]
+   xor rax.rax
+   mov rax, dword [rbx + 4]
    sub rax, 36
    shr rax, 2
    mov r8, rbx
@@ -1727,7 +1727,7 @@ rls:
    add r8, 4
    jmp rls
 wfound:
-   mov rdx, testx
+   mov rdx, restx
    mov cl, 0x7
    call cpritn
    jmp newliner
