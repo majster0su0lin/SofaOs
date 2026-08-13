@@ -195,7 +195,7 @@ steb:
    mov byte [0xb8003], 0x07
    mov qword [count], r15
    mov rax, [savior]
-   and rax, 0xFFFFFFF0
+   and rax, 0xFFFFFF0
    add rax, 0x118
    mov ebx, [rax]
    shr ebx, 1
@@ -219,7 +219,7 @@ zot:
    cmp rax, 0x7a4ff
    jne zot
    mov rax, qword [savior]
-   and rax, 0xFFFFFFF0
+   and rax, 0xFFFFFF0
    mov rbx, rax
    add rax, 0x100
    mov dword [rax], 0x7a000
@@ -285,7 +285,7 @@ zre:
    or eax, ebx
    mov dword [0x7a58c], eax
    mov rax, qword [savior]
-   and rax, 0xfffffff0
+   and rax, 0xffffff0
    add rax, 0x100
    mov rbx, rax
    add rbx, 0x38
@@ -1638,6 +1638,13 @@ errr:
    call cpritn
    jmp newliner
 prd:
+   mov rdx, [cmdc]
+   add rdx, 14
+   call gatherer
+   cmp r9, 1
+   je errr
+   mov r15, rax
+   push r15
    xor rax, rax
    mov rax, 0xe0000
 prl:
@@ -1727,23 +1734,151 @@ rls:
    add r8, 4
    jmp rls
 wfound:
-   mov rdx, testx
+   xor r12, r12
+   mov r12, rcx
+   add rcx, 4
+   mov eax, dword [rcx]
+   add r12, rax
+   add rcx, 40
+   xor r13, r13
+   xor r9, r9
+   xor r11, r11
+   mov r11, crid
+nlop:
+   mov bl, byte [rcx]
+   movzx rax, byte [rcx + 1]
+   cmp bl, 0
+   jne adfa
+   mov edx, dword [rcx + 4]
+   test dl, 1
+   je dsbld
+   mov r10, rbx
+   mov bl, byte [rcx + 3]
+   mov byte [r11], bl
+   inc r11
+   inc r13
+   jmp adfa
+dsbld:
+   add r9, 1
+adfa:
+   add rcx, rax
+   cmp rcx, r12
+   jb nlop
+   mov rcx, crid
+   xor r15, r15
+crcntr:
+   cmp byte [rcx], 0
+   je nomore
+   add r15, 1
+   jmp crcntr
+nomore:
+   mov rax, r13
+   push rax
+   mov rdx, fndn
    mov cl, 0x7
    call cpritn
-   jmp newliner
+   pop rax
+   push r13
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov eax, 0x1b
+   rdmsr
+   shl rdx, 32
+   or rax, rdx
+   mov rdx, 0xFFFFFFFFFFFFF000
+   and rax,rdx
+   push rax
+   mov eax, 1
+   cpuid
+   shr ebx, 24
+   movzx rbx, bl
+   pop rax
+   mov rdx, crid
+   pop r13
+   pop r15
+   cmp r13, r15
+   jb nigggerr
+   mov r13, r15
+   mov r9, 1
+nigggerr:
+   push r13
+niggger:
+   cmp r13, 0
+   je doner
+   cmp [rdx], rbx
+   je apsk
+   mov byte [rax + 0x300], 1
+   mov cl, byte [rdx]
+   mov byte [rax + 0x310], cl
+   add rdx, 1
+   sub r13, 1
+   jmp niggger
+apsk:
+   cmp r9, 1
+   je jomp
+   sub r13, 1
+jomp:
+   add rdx, 1
+   jmp niggger
+doner:
+   pop r13
+   push r13
+   mov rdx, crid
+niglp:
+   push rbx
+   mov rdx, waks
+   mov cl,0x7
+   call cpritn
+   pop rbx
+   pop r13
+   mov rdx, crid
+   xor r8, r8
+noglp:
+   push rbx
+   push r13
+   movzx rax, byte [rdx]
+   cmp rax, rbx
+   je apk
+   push rdx
+   push r8
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, med
+   mov cl, 0x7
+   call cpritn
+   pop r8
+   pop rdx
+   pop r13
+   pop rbx
+   add rdx, 1
+   add r8, 1
+   cmp r8, r13
+   je newliner
+   jmp noglp
+apk:
+   pop r13
+   pop rbx
+   add rdx, 1
+   jmp noglp
 crash:
    mov rdx, crtx
    mov cl, 0x7
    call cpritn
    jmp newliner
 crtx: db 'fart unsuccesful', 0
-testx: db 'succes', 0
+testx: db ' succes', 0
 wakup: db 'wakeup', 0
 idt: db 0
 shift: db 0
 curzor: dq 0
 tst: dq 0
+waks: db ' succesfuly waken up aps: ', 0
 char: db 0
+fndn: db 'number of cores found: ', 0
 idttbl:
 dw 4095
 dq 0x80210
@@ -1767,6 +1902,7 @@ time: db 'time', 0
 crk: db ':', 0
 ciarka8: db ' in cr8,', 0
 ccnt: dq 0
+med: db ' ', 0
 done: db 'Done', 0
 clscm: db 'cls', 0
 wdr: db 'whatindr', 0
@@ -1784,7 +1920,9 @@ ciarka6d: db ' in dr6,', 0
 ciarka7d: db ' in dr7', 0
 tran: db 'translate', 0
 relad: dq 0
-times 8192 - ($ - $$) db 0
+times 8704 - ($ - $$) db 0
+crid: times 256 db 0
 kniha equ 0x90000
 mbf equ 160
-hlpg: times 4096 db 0 
+hlpg: times 4096 db 0
+
