@@ -1,6 +1,9 @@
 [bits 16]
 [org 0x1000]
 start:
+   cmp byte [isbsp], 1
+   je apentry
+   mov byte [isbsp], 1
    xor ax, ax
    mov ds, ax
    mov es, ax
@@ -30,6 +33,7 @@ lp:
    jz kn
    int 0x10
    jmp lp
+isbsp: db 0
 kn:
    ret
 align 4
@@ -67,6 +71,9 @@ disk: db 0
 bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
 pamet: dw 0
 pamet2: dw 0
+apentry:
+   mov byte [0x67], 67
+   jmp apentry
 fnl32b:
 [bits 32]
    mov byte [0xb800c], 'F'
@@ -102,6 +109,10 @@ loo:
 looo:
    mov [edi], eax
    mov [edi+4], edx
+   cmp eax, 0xFEC00083
+   jb skipi
+   or dword [edi], 0x10
+skipi:
    add edi, 8
    add eax, 0x00200000
    adc edx, 0
@@ -195,7 +206,7 @@ steb:
    mov byte [0xb8003], 0x07
    mov qword [count], r15
    mov rax, [savior]
-   and rax, 0xFFFFFF0
+   and rax, 0xFFFFFFFF0
    add rax, 0x118
    mov ebx, [rax]
    shr ebx, 1
@@ -219,7 +230,7 @@ zot:
    cmp rax, 0x7a4ff
    jne zot
    mov rax, qword [savior]
-   and rax, 0xFFFFFF0
+   and rax, 0xFFFFFFFF0
    mov rbx, rax
    add rax, 0x100
    mov dword [rax], 0x7a000
@@ -285,7 +296,7 @@ zre:
    or eax, ebx
    mov dword [0x7a58c], eax
    mov rax, qword [savior]
-   and rax, 0xffffff0
+   and rax, 0xFFFFFFFF0
    add rax, 0x100
    mov rbx, rax
    add rbx, 0x38
@@ -1265,7 +1276,7 @@ tim:
    mov cl, al
    mov al, 0x2
    out 0x70, al
-   in al, 0x71										    
+   in al, 0x71
    mov bl, al
    mov al, 0
    out 0x70, al
@@ -1809,9 +1820,53 @@ niggger:
    je doner
    cmp [rdx], rbx
    je apsk
-   mov byte [rax + 0x300], 1
    mov cl, byte [rdx]
-   mov byte [rax + 0x310], cl
+   movzx r10d, cl
+   shl r10d, 24
+   mov dword [rax + 0x310], r10d
+   mov dword [rax + 0x300], 0x4500
+   push rax
+   push rbx
+   push rcx
+   push rdx
+   push r9
+   call tim
+   mov [ttest], al
+until:
+   call tim
+   cmp al, [ttest]
+   je until
+   pop r9
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   mov cl, byte [rdx]
+   movzx r10d, cl
+   shl r10d, 24
+   mov dword [rax + 0x310], r10d
+   mov dword [rax + 0x300], 0x4601
+   push rax
+   push rbx
+   push rcx
+   push rdx
+   push r9
+   call tim
+   mov [ttest], al
+unitil:
+   call tim
+   cmp al, [ttest]
+   je unitil
+   pop r9
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   mov cl, byte [rdx]
+   movzx r10d, cl
+   shl r10d, 24
+   mov dword [rax + 0x310], r10d
+   mov dword [rax + 0x300], 0x4601
    add rdx, 1
    sub r13, 1
    jmp niggger
@@ -1872,6 +1927,7 @@ crash:
 crtx: db 'fart unsuccesful', 0
 testx: db ' succes', 0
 wakup: db 'wakeup', 0
+ttest: db 0
 idt: db 0
 shift: db 0
 curzor: dq 0
