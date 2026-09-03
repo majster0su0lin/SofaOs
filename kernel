@@ -1,12 +1,12 @@
 [bits 16]
 [org 0x1000]
 start:
-   cmp byte [isbsp], 1
-   je apentry
-   mov byte [isbsp], 1
    xor ax, ax
    mov ds, ax
    mov es, ax
+   cmp byte [isbsp], 1
+   je apentry
+   mov byte [isbsp], 1
    mov [disk], dl
    mov [pamet], bx
    mov [pamet2], cx
@@ -72,7 +72,9 @@ bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
 pamet: dw 0
 pamet2: dw 0
 apentry:
-   mov byte [0x67], 67
+   mov al, 67
+   mov byte [0x67], al
+   hlt
    jmp apentry
 fnl32b:
 [bits 32]
@@ -202,12 +204,45 @@ toal:
    add al, 1
    jmp ac
 steb:
+   mov rax, [savior]
+   and rax, 0xFFFFFFFF0
+   mov eax, [rax + 0x0C]
+   xor rbx, rbx
+bitest:
+   bt eax, ebx
+   jc yez
+   add rbx, 1
+   cmp rbx, 32
+   je konc
+   jmp bitest
+pbs: dq 0
+npo: db 'no device found', 0
+yez:
+   mov edx, ebx
+   shl rdx, 7
+   mov rcx, [savior]
+   add rcx, 0x100
+   add rdx, rcx
+   add rdx, 0x28
+   mov ecx, [rdx]
+   and ecx, 0xf
+   cmp ecx, 3
+   je yess
+   add rbx, 1
+   jmp bitest
+konc:
+   mov rdx, npo
+   mov cl, 0x7
+   call cpritn
+   ret
+yess:
+   sub rdx, 0x28
+   mov [pbs], rdx
    mov byte [0xb8002], 'd'
    mov byte [0xb8003], 0x07
    mov qword [count], r15
-   mov rax, [savior]
-   and rax, 0xFFFFFFFF0
-   add rax, 0x118
+   mov rax, [pbs]
+   add rax, 0x18
    mov ebx, [rax]
    shr ebx, 1
    shl ebx, 1
@@ -229,19 +264,17 @@ zot:
    mov byte [rax], 0
    cmp rax, 0x7a4ff
    jne zot
-   mov rax, qword [savior]
-   and rax, 0xFFFFFFFF0
+   mov rax, [pbs]
    mov rbx, rax
-   add rax, 0x100
    mov dword [rax], 0x7a000
    add rax, 0x4
    mov dword [rax], 0
    add rax, 0x4
    mov dword [rax], 0x7a400
-   add rbx, 0x10c
+   add rbx, 0xc
    mov dword [rbx], 0
-   sub rbx, 0x10c
-   add rbx, 0x118
+   sub rbx, 0xc
+   add rbx, 0x18
    mov ecx, [rbx]
    mov edx, 1
    shl edx, 4
@@ -295,9 +328,7 @@ zre:
    shl ebx, 31
    or eax, ebx
    mov dword [0x7a58c], eax
-   mov rax, qword [savior]
-   and rax, 0xFFFFFFFF0
-   add rax, 0x100
+   mov rax, [pbs]
    mov rbx, rax
    add rbx, 0x38
    add rax, 0x18
@@ -342,6 +373,18 @@ ttwo:
    cmp eax, 0x1
    jne tte
    mov r14d, 0x24
+   mov r15d, 0x4
+   mov ecx, ebx
+   or ecx, r15d
+   mov dx, 0xcfc
+   mov eax, ecx
+   out dx, eax
+   mov dx, 0xcfc
+   in eax, dx
+   or ecx, 0b110
+   mov dx, 0xcfc
+   mov eax, ecx
+   out dx, eax
    mov eax, ebx
    or eax, r14d
    mov dx, 0xcf8
@@ -897,6 +940,24 @@ badd:
 sucend:
    mov rax, 1
    ret
+cmp:
+   xor rcx, rcx
+   xor rdx, rdx
+   mov byte cl, [rax]
+   mov byte dl, [rbx]
+   cmp dl, 0
+   je sucendd
+   cmp cl, dl
+   jne baddd
+   add rax, 1
+   add rbx, 1
+   jmp cmp
+baddd:
+   mov rax, 0
+   ret
+sucendd:
+   mov rax, 1
+   ret
 miguel:
    xor rdx, rdx
    xor rax, rax
@@ -1341,11 +1402,26 @@ systm:
    call cmper
    cmp rax, 1
    je debdo
+   mov rbx, stai
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je stdo
    mov rbx, reds
    mov rax, [cmdc]
    call cmper
    cmp rax, 1
    je rdsdo
+   mov rbx, inout
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je ido
+   mov rbx, pltai
+   mov rax, [cmdc]
+   call cmper
+   cmp rax, 1
+   je pltdo
   mov rbx, wakup
   mov rax, [cmdc]
   call cmper
@@ -1363,6 +1439,41 @@ newliner:
    add rax, 0xB8000
    mov qword [curzor], rax
    jmp tets
+ido:
+   mov rdx, [cmdc]
+   add rdx, 12
+   call gatherer
+   mov r15, rax
+   push r15
+   cmp r9, 1
+   je sike
+   add rdx, 2
+   call gatherer
+   cmp r9, 1
+   je sike
+   mov r15, rax
+   push r15
+   cmp r9, 1
+   je sike
+   add rdx, 2
+   call gatherer
+   cmp r9, 1
+   je sike
+   mov r14, rax
+   pop r15
+   mov r13, r15
+   pop r15
+   mov rax, r15
+   xor rdx, rdx
+   mov rdx, r13
+   out dx, al
+   mov rdx, r14
+   in al, dx
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   jmp newliner
 tmdo:
    call tim
    cmp r9, 0
@@ -1406,6 +1517,569 @@ tmdo:
    mov cl, 0x7
    call cpritn
    jmp newliner
+stdo:
+   mov rsi, 0x100000
+   cmp dword [rsi], 'GGUF'
+   jne rrr
+   add rsi, 4
+   xor rax, rax
+   mov eax, dword [rsi]
+   mov dword [verison], eax
+   add rsi, 4
+   mov rax, qword [rsi]
+   mov qword [tentry], rax
+   add rsi, 8
+   mov rax, qword [rsi]
+   mov qword [mentry], rax
+   add rsi, 8
+   push rsi
+   mov rdx, vtxt
+   mov cl, 0x7
+   call cpritn
+   mov eax, dword [verison]
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, mtxt
+   mov cl, 0x7
+   call cpritn
+   mov rax, qword [mentry]
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, ttet
+   mov cl, 0x7
+   call cpritn
+   mov rax, qword [tentry]
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rbx, (0x100000 + 24)
+genlp:
+   mov rax, qword [rbx]
+   add rbx, 8
+   cmp eax, 20
+   je findmtdt
+tie:
+   add rbx, rax
+   mov eax, dword [rbx]
+   call tagid
+   cmp r9, 1
+   je parse_err
+   add rbx, 4
+   add rbx, rdx
+   jmp genlp
+findmtdt:
+   push rax
+   push rbx
+   push rcx
+   push rdx
+   mov rax, rbx
+   mov rbx, gnar
+   call cmp
+   cmp rax, 1
+   je ganok
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   jmp tie
+ganok:
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   add rbx, 20
+   mov eax, dword [rbx]
+   call tagid
+   sub rdx, 8
+   add rbx, 12
+   mov rdi, prbf
+   mov qword [bflen], rdx
+cper:
+   cmp rdx, 64
+   jae parse_err
+   mov al, byte [rbx]
+   mov byte [rdi], al
+   add rbx, 1
+   add rdi, 1
+   sub rdx, 1
+   cmp rdx, 0
+   jne cper
+   mov rdx, gentxt
+   mov cl, 0x7
+   call cpritn
+   mov rdx, prbf
+   mov cl, 0x7
+   call cpritn
+   mov rdx, mtext
+   mov cl, 0x7
+   call cpritn
+   mov rdi, bos
+   mov rsi, bosb
+   call etfun
+   mov rdi, eos
+   mov rsi, eosb
+   call etfun
+   mov rdi, tok
+   call etfun
+   mov qword [toks], r8
+   mov qword [toke], r9
+   mov rdi, scr
+   call etfun
+   mov qword [scrs], r8
+   mov qword [scre], r9
+   mov rdi, tty
+   call etfun
+   mov qword [ttys], r8
+   mov qword [ttye], r9
+   mov rsi, vsz
+   call spcp
+   mov rdi, prbf
+   mov rsi, vszb
+   call etfun
+   mov rsi, blc
+   call spcp
+   mov rdi, prbf
+   mov rsi, blcb
+   call etfun
+   mov rsi, ctl
+   call spcp
+   mov rdi, prbf
+   mov rsi, ctlb
+   call etfun
+   mov rsi, rpf
+   call spcp
+   mov rdi, prbf
+   mov rsi, rpfb
+   call etfun
+   mov rsi, embl
+   call spcp
+   mov rdi, prbf
+   mov rsi, emblb
+   call etfun
+   mov rsi, ffl
+   call spcp
+   mov rdi, prbf
+   mov rsi, fflb
+   call etfun
+   mov rsi, ath
+   call spcp
+   mov rdi, prbf
+   mov rsi, athb
+   call etfun
+   mov rsi, atv
+   call spcp
+   mov rdi, prbf
+   mov rsi, atvb
+   call etfun
+   mov rsi, lne
+   call spcp
+   mov rdi, prbf
+   mov rsi, lneb
+   call etfun
+   mov eax, blcb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, emblb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, athb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, atvb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, fflb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, vszb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, lneb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, bosb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, eosb
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, toks
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, toke
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, scrs
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, scre
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, ttys
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov rdx, pipe
+   mov cl, 0x7
+   call cpritn
+   mov eax, ttye
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   jmp newliner
+vtxt: db 'version: ', 0
+mtext: db ' going trough metadata entryes..... ', 0
+mtxt: db ' number of metadata entryes found: ', 0
+ttet: db ' number of tensor entryes found: ', 0
+verison: dd 0
+pipe: db '|', 0
+mentry: dq 0
+tentry: dq 0
+gentxt: db ' genneral architecture: ', 0
+mdnf: db 'model was mot found', 0
+bflen: dq 0
+prbf: times 64 db 0
+blc:  db '.block_count', 0
+blcb: dd 30
+embl: db '.embedding_length', 0
+emblb: dd 576
+ath:  db '.attention.head_count', 0
+athb: dd 9
+atv:  db '.attention.head_count_kv', 0
+atvb: dd 3
+ctl:  db '.context_length', 0
+ctlb: dd 8192
+ffl:  db '.feed_forward_length', 0
+fflb: dd 1536
+vsz:  db '.vocab_size', 0
+vszb: dd 49152
+rpf:  db '.rope.freq_base', 0
+rpfb: dd 100000
+lne:  db '.attention.layer_norm_rms_epsilon', 0
+lneb: dd 0x38d1b717
+bos:  db 'tokenizer.ggml.bos_token_id', 0
+bosb: dd 1
+eos:  db 'tokenizer.ggml.eos_token_id', 0
+eosb: dd 2
+tok:  db 'tokenizer.ggml.tokens', 0
+toks: dq 0x00000447      ; Start offset of token strings (49152 tokens)
+toke: dq 0x000BA665      ; End offset of token strings
+scr:  db 'tokenizer.ggml.scores', 0
+scrs: dq 0
+scre: dq 0
+tty:  db 'tokenizer.ggml.token_type', 0
+ttys: dq 0x000BA68A      ; Start offset of token types array
+ttye: dq 0x000EA696      ; End offset of token types array
+mrg:  db 'tokenizer.ggml.merges', 0
+mrgs: dq 0x000EA6B7      ; Start offset of BPE merges list
+mrge: dq 0x001AFDA8      ; End offset of BPE merges list
+
+; =====================================================================
+; SmolLM2-135M-Instruct-f16 HARDCODED MODEL & TENSOR DATA
+; =====================================================================
+smollm2_arch:            db 'llama', 0
+smollm2_name:            db 'SmolLM2-135M-Instruct-f16', 0
+smollm2_gguf_hdr_len:    dq 0x1B3F40        ; GGUF Data Section Start Offset (1,785,664 bytes)
+smollm2_token_embd_off:  dq 0x00000000      ; token_embd.weight relative offset (dims=[576, 49152], F16)
+smollm2_output_norm_off: dq 0x100A1C00      ; output_norm.weight relative offset (dims=[576], F32)
+smollm2_blk_base_off:    dq 0x03600000      ; Block 0 base relative offset
+smollm2_blk_stride:      dq 0x006C1200      ; Per-block offset stride (7,082,496 bytes)
+
+; Hardcoded Tokenizer Offsets (SmolLM2 Token ID Book)
+smollm2_tok_start_off:   dq 0x00000447      ; Token strings dictionary start
+smollm2_tok_end_off:     dq 0x000BA665      ; Token strings dictionary end
+smollm2_tty_start_off:   dq 0x000BA68A      ; Token types start
+smollm2_tty_end_off:     dq 0x000EA696      ; Token types end
+smollm2_mrg_start_off:   dq 0x000EA6B7      ; BPE merges start
+smollm2_mrg_end_off:     dq 0x001AFDA8      ; BPE merges end
+
+; Relative tensor offsets within each transformer block k (0 <= k < 30):
+smollm2_attn_norm_rel:   dq 0x00000000      ; blk.k.attn_norm.weight (dims=[576], F32)
+smollm2_ffn_down_rel:    dq 0x00000900      ; blk.k.ffn_down.weight (dims=[1536, 576], F16)
+smollm2_ffn_gate_rel:    dq 0x001B0900      ; blk.k.ffn_gate.weight (dims=[576, 1536], F16)
+smollm2_ffn_up_rel:      dq 0x00360900      ; blk.k.ffn_up.weight (dims=[576, 1536], F16)
+smollm2_ffn_norm_rel:    dq 0x00510900      ; blk.k.ffn_norm.weight (dims=[576], F32)
+smollm2_attn_k_rel:      dq 0x00511200      ; blk.k.attn_k.weight (dims=[576, 192], F16)
+smollm2_attn_output_rel: dq 0x00547200      ; blk.k.attn_output.weight (dims=[576, 576], F16)
+smollm2_attn_q_rel:      dq 0x005E9200      ; blk.k.attn_q.weight (dims=[576, 576], F16)
+smollm2_attn_v_rel:      dq 0x0068B200      ; blk.k.attn_v.weight (dims=[576, 192], F16)
+spcp:
+   mov rax, qword [bflen]
+   mov rbx, prbf
+   add rbx, rax
+splp:
+   mov al, byte [rsi]
+   mov byte [rbx], al
+   cmp al, 0
+   je spend
+   inc rbx
+   inc rsi
+   jmp splp
+spend:
+   ret
+rrr:
+   mov rdx, mdnf
+   mov cl, 0x7
+   call cpritn
+   jmp newliner
+etfun:
+   mov rbx, 0x100000
+   add rbx, 24
+   mov r10, qword [mentry]
+etflp:
+   cmp r10,0
+   je etfl
+   push rax
+   push rbx
+   push rcx
+   push rdx
+   push rsi
+   push rdi
+   mov rax, r10
+   call hexbintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   pop rdi
+   pop rsi
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   sub r10,1
+   mov rax, qword [rbx]
+   add rbx, 8
+   push rdi
+   push rsi
+   push rax
+   push rbx
+   push rcx
+   push rdx
+   push r10
+   mov rax, rbx
+   mov rbx, rdi
+   call cmp
+   cmp rax, 1
+   jne ntsok
+   pop r10
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   pop rsi
+   pop rdi
+   add rbx, rax
+   mov eax, dword [rbx]
+   mov r13d, eax
+   call tagid
+   cmp rdx, 4
+   je qadro
+   cmp r13d, 9
+   je arrptrs
+   sub rdx, 8
+   add rbx, 12
+   mov r8, rbx
+   add rbx, rdx
+   mov r9, rbx
+   ret
+   arrptrs:
+   sub rdx, 12
+   add rbx, 16
+   mov r8, rbx
+   add rbx, rdx
+   mov r9, rbx
+   ret
+   qadro:
+qadro:
+   add rbx, 4
+   mov eax, dword [rbx]
+   mov dword [rsi], eax
+   ret
+etfl:
+   xor r8, r8
+   xor r9, r9
+   ret
+ntsok:
+   pop r10
+   pop rdx
+   pop rcx
+   pop rbx
+   pop rax
+   pop rsi
+   pop rdi
+   add rbx, rax
+   mov eax, dword [rbx]
+   call tagid
+   cmp r9, 1
+   je parse_err
+   add rbx, 4
+   add rbx, rdx
+   jmp etflp
+parse_err:
+  mov rdx, badtag
+  mov cl, 0x7
+  call cpritn
+  jmp newliner
+badtag: db 'bad tag', 0
+tagid:
+   xor r9, r9
+   cmp eax, 0
+   je ui8
+   cmp eax, 1
+   je ui8
+   cmp eax, 2
+   je ui6
+   cmp eax, 3
+   je ui6
+   cmp eax, 4
+   je ui2
+   cmp eax, 5
+   je ui2
+   cmp eax, 6
+   je ui2
+   cmp eax, 7
+   je ui8
+   cmp eax, 8
+   je strign
+   cmp eax, 9
+   je array
+   cmp eax, 10
+   je ui4
+   cmp eax, 11
+   je ui4
+   cmp eax, 12
+   je ui4
+   xor rdx, rdx
+   mov r9, 1
+   ret
+ui8:
+   xor rdx, rdx
+   mov rdx, 1
+   ret
+ui6:
+   xor rdx, rdx
+   mov rdx, 2
+   ret
+ui2:
+   xor rdx, rdx
+   mov rdx, 4
+   ret
+ui4:
+   xor rdx, rdx
+   mov rdx, 8
+   ret
+strign:
+   push rbx
+   mov rdx, qword [rbx + 4]
+   add rdx, 8
+   pop rbx
+   ret
+array:
+   push rbx
+   add rbx, 4
+   mov eax, dword [rbx]
+   add rbx, 4
+   mov rcx, qword [rbx]
+   add rbx, 8
+   cmp eax, 8
+   je arrstr
+   push rcx
+   call tagid
+   pop rcx
+   mov rax, rcx
+   mul rdx
+   add rax, 12
+   mov rdx, rax
+   pop rbx
+   ret
+arrstr:
+   xor r11, r11
+arrstrlp:
+   cmp rcx, 0
+   je arrstrdone
+   mov rax, qword [rbx]
+   add rax, 8
+   add r11, rax
+   add rbx, rax
+   dec rcx
+   jmp arrstrlp
+arrstrdone:
+   add r11, 12
+   mov rdx, r11
+   pop rbx
+   ret
 bint:
    xor r11, r11
    xor r12, r12
@@ -1825,38 +2499,69 @@ niggger:
    shl r10d, 24
    mov dword [rax + 0x310], r10d
    mov dword [rax + 0x300], 0x4500
+walter:
+   mov r11d, [rax + 0x300]
+   test r11d, 1 << 12
+   jnz walter
    push rax
    push rbx
    push rcx
    push rdx
    push r9
-   call tim
-   mov [ttest], al
+   in al, 0x61
+   and al, 0xfc
+   or al, 0x1
+   out 0x61, al
+   mov al, 0xb0
+   out 0x43, al
+   mov al, 0x9c
+   out 0x42, al
+   mov al, 0x2e
+   out 0x42, al
 until:
-   call tim
-   cmp al, [ttest]
-   je until
+   in al, 0x61
+   test al, 0x20
+   jz until
    pop r9
    pop rdx
    pop rcx
    pop rbx
    pop rax
+   mov dword [rax + 0x310], r10d
+   mov dword [rax + 0x300], 0x8500
+vojtech:
+   mov r11d, [rax + 0x300]
+   test r11d, 1 << 12
+   jnz vojtech
    mov cl, byte [rdx]
    movzx r10d, cl
    shl r10d, 24
    mov dword [rax + 0x310], r10d
    mov dword [rax + 0x300], 0x4601
+comoj:
+   mov r11d, [rax + 0x300]
+   test r11d, 1 << 12
+   jnz comoj
    push rax
    push rbx
    push rcx
    push rdx
    push r9
    call tim
-   mov [ttest], al
-unitil:
-   call tim
-   cmp al, [ttest]
-   je unitil
+   in al, 0x61
+   and al, 0xfc
+   or al, 0x1
+   out 0x61, al
+   mov al, 0xb0
+   out 0x43, al
+   mov al, 0xEF
+   out 0x42, al
+   mov al, 0
+   out 0x42, al
+unptil:
+   in al, 0x61
+   test al, 0x20
+   jz unptil
    pop r9
    pop rdx
    pop rcx
@@ -1867,6 +2572,10 @@ unitil:
    shl r10d, 24
    mov dword [rax + 0x310], r10d
    mov dword [rax + 0x300], 0x4601
+for:
+   mov r11d, [rax + 0x300]
+   test r11d, 1 << 12
+   jnz for
    add rdx, 1
    sub r13, 1
    jmp niggger
@@ -1924,13 +2633,88 @@ crash:
    mov cl, 0x7
    call cpritn
    jmp newliner
+pltdo:
+   mov rdx, sect
+   mov cl, 0x7
+   call cpritn
+   mov rax, 38
+   call drs
+   mov rbx, 0x7b000
+   cmp dword [rbx], 'GGUF'
+   je gboy
+   mov rdx, crtx
+   mov cl, 0x7
+   jmp newliner
+gboy:
+   mov rbx, 0x100000
+   mov rax, 38
+gby:
+   push rax
+   push rbx
+   call memld
+   pop rbx
+   pop rax
+   push rax
+   push rbx
+   mov r15, qword [curzor]
+   mov qword [czs], r15
+   call bintrn
+   mov rdx, netanyahu
+   mov cl, 0x7
+   call cpritn
+   mov r15, qword [curzor]
+   mov qword [cas], r15
+   mov r15, qword [czs]
+   mov qword [curzor], r15
+   pop rbx
+   pop rax
+   add rbx,512
+   add rax, 1
+   push rax
+   push rbx
+   mov rbx, gend
+   mov rax, 0x7b000
+   call cmp
+   mov r9, rax
+   pop rbx
+   pop rax
+   cmp r9, 1
+   jne gby
+   mov r15, qword [cas]
+   mov qword [curzor], r15
+   mov rdx, med
+   mov cl, 0x7
+   call cpritn
+   mov rdx, testx
+   mov cl, 0x7
+   call cpritn
+   jmp newliner
+memld:
+   push rbx
+   call drs
+   pop rbx
+   mov rcx, 0x7b000
+   xor rdx, rdx
+melp:
+   mov rdi, qword [rcx]
+   mov qword [rbx], rdi
+   add rbx, 8
+   add rcx, 8
+   add rdx, 8
+   cmp rdx, 512
+   jne melp
+   ret
 crtx: db 'fart unsuccesful', 0
+sect: db 'loading sector:', 0
 testx: db ' succes', 0
+czs: dq 0
 wakup: db 'wakeup', 0
 ttest: db 0
 idt: db 0
 shift: db 0
 curzor: dq 0
+pltai: db 'loadai', 0
+inout: db 'inout', 0
 tst: dq 0
 waks: db ' succesfuly waken up aps: ', 0
 char: db 0
@@ -1942,23 +2726,27 @@ head: db '+---------------------------------------------------------------------
 hlpcm: db 'help', 0
 vercm: db 'ver', 0
 cred: db 'credits', 0
-hlptxt: db 'commands: help = gives u help :>                                     ver = shows curent version of sofaos                                            credits = tels u who made this os                                               cls = clears the screen                                                         whatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8                             saythis = echoes back what u type after it                                      translate = converts hex number to decimal                                      peek = shows u whats stored at a memory address                                 put = writes a value to a memory address                                        ', 0
-vertxt: db 'SofaOs 0.67                                                          ', 0
+hlptxt: db 'commands: help = gives u help :>ver = shows curent version of sofaoscredits = tels u who made this oscls = clears the screenwhatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8saythis = echoes back what u type after ittranslate = converts hex number to decimal and backpeek = shows u whats stored at a memory addressput = puts number to a memorytime = shows timewhatindr = shows u whats in dr0,dr1,dr2,dr3,dr6 and dr7secr = reads what in disk on that sectorwakeup = wakes up some number of cores that u chose', 0
 credtxt: db 'i was made by scrt401                                                ', 0
 wht: db 'whatincr', 0
 echcm: db 'saythis', 0
 ciarka: db ' in cr0,', 0
+stai: db 'setupai', 0
 ciarka2: db ' in cr2,', 0
+cas: dq 0
 ciarka3: db ' in cr3,', 0
 numer: db 'no idea what that number is', 0
 ciarka4: db ' in cr4,', 0
 memf: db 'peek', 0
 memp: db 'put', 0
 time: db 'time', 0
+gnar: db 'general.architecture', 0
 crk: db ':', 0
 ciarka8: db ' in cr8,', 0
+gend: db 'endofggufmoddelfile', 0
 ccnt: dq 0
 med: db ' ', 0
+vertxt: db 'version 1 non ai', 0
 done: db 'Done', 0
 clscm: db 'cls', 0
 wdr: db 'whatindr', 0
@@ -1976,9 +2764,9 @@ ciarka6d: db ' in dr6,', 0
 ciarka7d: db ' in dr7', 0
 tran: db 'translate', 0
 relad: dq 0
-times 8704 - ($ - $$) db 0
+times 12288 - ($ - $$) db 0
 crid: times 256 db 0
-kniha equ 0x90000
+kniha equ 0x900000
 mbf equ 160
 hlpg: times 4096 db 0
-
+fremm:

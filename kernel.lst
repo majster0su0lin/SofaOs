@@ -1,0 +1,3108 @@
+     1                                  [bits 16]
+     2                                  [org 0x1000]
+     3                                  start:
+     4 00000000 31C0                       xor ax, ax
+     5 00000002 8ED8                       mov ds, ax
+     6 00000004 8EC0                       mov es, ax
+     7 00000006 803E[5400]01               cmp byte [isbsp], 1
+     8 0000000B 0F848B00                   je apentry
+     9 0000000F C606[5400]01               mov byte [isbsp], 1
+    10 00000014 8816[7E00]                 mov [disk], dl
+    11 00000018 891E[9600]                 mov [pamet], bx
+    12 0000001C 890E[9800]                 mov [pamet2], cx
+    13 00000020 B40E                       mov ah, 0x0E
+    14 00000022 B04B                       mov al, 'K'
+    15 00000024 CD10                       int 0x10
+    16 00000026 B00D                       mov al, 0x0D
+    17 00000028 CD10                       int 0x10
+    18 0000002A B00A                       mov al, 0x0A
+    19 0000002C CD10                       int 0x10
+    20 0000002E BE[7F00]                   mov si, bbios
+    21 00000031 E81500                     call cpirnt
+    22 00000034 FA                         cli
+    23 00000035 0F0116[7800]               lgdt [gdtp]
+    24 0000003A 0F20C0                     mov eax, cr0
+    25 0000003D 6683C801                   or eax, 1
+    26 00000041 0F22C0                     mov cr0, eax
+    27 00000044 EA[A200]0800               jmp CIDE_SEG:fnl32b
+    28                                  cpirnt:
+    29 00000049 B40E                       mov ah, 0x0E
+    30                                  lp:
+    31 0000004B AC                         lodsb
+    32 0000004C 84C0                       test al, al
+    33 0000004E 7405                       jz kn
+    34 00000050 CD10                       int 0x10
+    35 00000052 EBF7                       jmp lp
+    36 00000054 00                      isbsp: db 0
+    37                                  kn:
+    38 00000055 C3                         ret
+    39 00000056 90<rep 2h>              align 4
+    40                                  gdts:
+    41 00000058 0000000000000000        dd 0, 0
+    42                                  gdtc:
+    43 00000060 FFFF                    dw 0xFFFF
+    44 00000062 0000                    dw 0x0000
+    45 00000064 00                      db 0x00
+    46 00000065 9A                      db 0x9A
+    47 00000066 CF                      db 0xCF
+    48 00000067 00                      db 0x00
+    49                                  gdtd:
+    50 00000068 FFFF                    dw 0xFFFF
+    51 0000006A 0000                    dw 0x0000
+    52 0000006C 00                      db 0x00
+    53 0000006D 92                      db 0x92
+    54 0000006E CF                      db 0xCF
+    55 0000006F 00                      db 0x00
+    56                                  gdt67:
+    57 00000070 0000                    dw 0x0000
+    58 00000072 0000                    dw 0x0000
+    59 00000074 00                      db 0x00
+    60 00000075 9A                      db 0x9A
+    61 00000076 20                      db 0x20
+    62 00000077 00                      db 0x00
+    63                                  gdte:
+    64                                  gdtp:
+    65 00000078 1F00                       dw gdte - gdts -1
+    66 0000007A [58000000]                 dd gdts
+    67                                  CIDE_SEG equ gdtc -gdts
+    68                                  DATA_SEG equ gdtd - gdts
+    69                                  CODE67_SEG equ gdt67 - gdts
+    70 0000007E 00                      disk: db 0
+    71 0000007F 627965206279652062-     bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
+    71 00000088 696F7320666F726576-
+    71 00000091 65720D0A00         
+    72 00000096 0000                    pamet: dw 0
+    73 00000098 0000                    pamet2: dw 0
+    74                                  apentry:
+    75 0000009A B043                       mov al, 67
+    76 0000009C A26700                     mov byte [0x67], al
+    77 0000009F F4                         hlt
+    78 000000A0 EBF8                       jmp apentry
+    79                                  fnl32b:
+    80                                  [bits 32]
+    81 000000A2 C6050C800B0046             mov byte [0xb800c], 'F'
+    82 000000A9 C6050D800B000F             mov byte [0xb800d], 0x0F
+    83 000000B0 66B81000                   mov ax, DATA_SEG
+    84 000000B4 8ED8                       mov ds, ax
+    85 000000B6 8EC0                       mov es, ax
+    86 000000B8 8EE0                       mov fs, ax
+    87 000000BA 8EE8                       mov gs, ax
+    88 000000BC 8ED0                       mov ss, ax
+    89 000000BE BC00700600                 mov esp, 0x67000
+    90 000000C3 C60500800B0070             mov byte [0xB8000], 'p'
+    91 000000CA C60501800B0000             mov byte [0xB8001], 0x0
+    92 000000D1 BF00000700                 mov edi, 0x70000
+    93 000000D6 31C0                       xor eax, eax
+    94 000000D8 B900280000                 mov ecx, 10240
+    95 000000DD F3AB                       rep stosd
+    96 000000DF C70500000700031007-        mov dword [0x70000], 0x71003
+    96 000000E8 00                 
+    97 000000E9 C70504000700000000-        mov dword [0x70004], 0x00000000
+    97 000000F2 00                 
+    98 000000F3 BF00100700                 mov edi, 0x71000
+    99 000000F8 B803200700                 mov eax, 0x72003
+   100 000000FD B908000000                 mov ecx, 8
+   101                                  loo:
+   102 00000102 8907                       mov [edi], eax
+   103 00000104 C7470400000000             mov dword [edi+4], 0
+   104 0000010B 83C708                     add edi, 8
+   105 0000010E 0500100000                 add eax, 0x1000
+   106 00000113 E2ED                       loop loo
+   107 00000115 BF00200700                 mov edi, 0x72000
+   108 0000011A B883000000                 mov eax, 0x00000083
+   109 0000011F BA00000000                 mov edx, 0
+   110 00000124 B900100000                 mov ecx, 4096
+   111                                  looo:
+   112 00000129 8907                       mov [edi], eax
+   113 0000012B 895704                     mov [edi+4], edx
+   114 0000012E 3D8300C0FE                 cmp eax, 0xFEC00083
+   115 00000133 7203                       jb skipi
+   116 00000135 830F10                     or dword [edi], 0x10
+   117                                  skipi:
+   118 00000138 83C708                     add edi, 8
+   119 0000013B 0500002000                 add eax, 0x00200000
+   120 00000140 83D200                     adc edx, 0
+   121 00000143 E2E4                       loop looo
+   122 00000145 0F20E0                     mov eax, cr4
+   123 00000148 83C820                     or eax, 1 << 5
+   124 0000014B 0F22E0                     mov cr4, eax
+   125 0000014E B800000700                 mov eax, 0x70000
+   126 00000153 0F22D8                     mov cr3, eax
+   127 00000156 B9800000C0                 mov ecx, 0xC0000080
+   128 0000015B 0F32                       rdmsr
+   129 0000015D 0D00010000                 or eax, 1 << 8
+   130 00000162 0F30                       wrmsr
+   131 00000164 0F20C0                     mov eax, cr0
+   132 00000167 0D00000080                 or eax, 1 << 31
+   133 0000016C 0F22C0                     mov cr0, eax
+   134 0000016F EA[76010000]1800           jmp CODE67_SEG:epstien
+   135                                  [bits 64]
+   136                                  epstien:
+   137 00000176 C6042500800B0065           mov byte [0xb8000], 'e'
+   138 0000017E C6042501800B0007           mov byte [0xb8001], 0x07
+   139 00000186 30C0                       xor al, al
+   140 00000188 30D2                       xor dl, dl
+   141 0000018A 4D31FF                     xor r15, r15
+   142 0000018D 30C9                       xor cl, cl
+   143 0000018F 30DB                       xor bl, bl
+   144 00000191 4D31C9                     xor r9, r9
+   145 00000194 41B101                     mov r9b, 1
+   146 00000197 49BC-                      mov r12, hlpg
+   146 00000199 [0031000000000000] 
+   147                                  strg:
+   148 000001A1 C6042500800B0071           mov byte [0xb8000], 'q'
+   149 000001A9 C6042501800B0007           mov byte [0xb8001], 0x7
+   150 000001B1 4531DB                     xor r11d, r11d
+   151 000001B4 4D31C0                     xor r8, r8
+   152 000001B7 450FB6D1                   movzx r10d, r9b
+   153 000001BB 41C1E21F                   shl r10d, 31
+   154 000001BF 440FB6C0                   movzx r8d, al
+   155 000001C3 41C1E010                   shl r8d, 16
+   156 000001C7 4509D0                     or r8d, r10d
+   157 000001CA 4D31D2                     xor r10, r10
+   158 000001CD 4C0FB6D3                   movzx r10, bl
+   159 000001D1 41C1E20B                   shl r10d, 11
+   160 000001D5 4509D0                     or r8d, r10d
+   161 000001D8 4D31D2                     xor r10, r10
+   162 000001DB 440FB6D1                   movzx r10d, cl
+   163 000001DF 41C1E208                   shl r10d, 8
+   164 000001E3 4509D0                     or r8d, r10d
+   165 000001E6 4D31D2                     xor r10, r10
+   166 000001E9 4188C5                     mov r13b, al
+   167 000001EC 4831C0                     xor rax,rax
+   168 000001EF 66BAF80C                   mov dx, 0xcf8
+   169 000001F3 4489C0                     mov eax, r8d
+   170 000001F6 EF                         out dx, eax
+   171 000001F7 4831C0                     xor rax, rax
+   172 000001FA 66BAFC0C                   mov dx, 0xcfc
+   173 000001FE ED                         in eax, dx
+   174 000001FF 4189C3                     mov r11d, eax
+   175 00000202 4831C0                     xor rax, rax
+   176 00000205 4488E8                     mov al, r13b
+   177 00000208 80C101                     add cl, 1
+   178 0000020B 80F908                     cmp cl, 8
+   179 0000020E 7439                       je tobl
+   180                                  bc:
+   181 00000210 80FB20                     cmp bl, 32
+   182 00000213 743B                       je toal
+   183                                  ac:
+   184 00000215 4183FBFF                   cmp r11d, 0xffffffff
+   185 00000219 7486                       je strg
+   186 0000021B 45890424                   mov [r12], r8d
+   187 0000021F 4983C404                   add r12, 4
+   188 00000223 45891C24                   mov [r12], r11d
+   189 00000227 E9AE020000                 jmp ttwo
+   190                                  tt:
+   191 0000022C 4983C404                   add r12, 4
+   192 00000230 C6042502800B0064           mov byte [0xb8002], 'd'
+   193 00000238 C6042503800B0007           mov byte [0xb8003], 0x7
+   194 00000240 4983C701                   add r15, 1
+   195 00000244 E958FFFFFF                 jmp strg
+   196                                  tobl:
+   197 00000249 30C9                       xor cl, cl
+   198 0000024B 80C301                     add bl, 1
+   199 0000024E EBC0                       jmp bc
+   200                                  toal:
+   201 00000250 3CFF                       cmp al, 255
+   202 00000252 7406                       je steb
+   203 00000254 30DB                       xor bl, bl
+   204 00000256 0401                       add al, 1
+   205 00000258 EBBB                       jmp ac
+   206                                  steb:
+   207 0000025A 488B0425[6D050000]         mov rax, [savior]
+   208 00000262 4883E0F0                   and rax, 0xFFFFFFFF0
+   208          ******************       warning: signed dword value exceeds bounds [-w+number-overflow]
+   209 00000266 8B400C                     mov eax, [rax + 0x0C]
+   210 00000269 4831DB                     xor rbx, rbx
+   211                                  bitest:
+   212 0000026C 0FA3D8                     bt eax, ebx
+   213 0000026F 7224                       jc yez
+   214 00000271 4883C301                   add rbx, 1
+   215 00000275 4883FB20                   cmp rbx, 32
+   216 00000279 7446                       je konc
+   217 0000027B EBEF                       jmp bitest
+   218 0000027D 0000000000000000        pbs: dq 0
+   219 00000285 6E6F20646576696365-     npo: db 'no device found', 0
+   219 0000028E 20666F756E6400     
+   220                                  yez:
+   221 00000295 89DA                       mov edx, ebx
+   222 00000297 48C1E207                   shl rdx, 7
+   223 0000029B 488B0C25[6D050000]         mov rcx, [savior]
+   224 000002A3 4881C100010000             add rcx, 0x100
+   225 000002AA 4801CA                     add rdx, rcx
+   226 000002AD 4883C228                   add rdx, 0x28
+   227 000002B1 8B0A                       mov ecx, [rdx]
+   228 000002B3 83E10F                     and ecx, 0xf
+   229 000002B6 83F903                     cmp ecx, 3
+   230 000002B9 7418                       je yess
+   231 000002BB 4883C301                   add rbx, 1
+   232 000002BF EBAB                       jmp bitest
+   233                                  konc:
+   234 000002C1 48BA-                      mov rdx, npo
+   234 000002C3 [8502000000000000] 
+   235 000002CB B107                       mov cl, 0x7
+   236 000002CD E83C080000                 call cpritn
+   237 000002D2 C3                         ret
+   238                                  yess:
+   239 000002D3 4883EA28                   sub rdx, 0x28
+   240 000002D7 48891425[7D020000]         mov [pbs], rdx
+   241 000002DF C6042502800B0064           mov byte [0xb8002], 'd'
+   242 000002E7 C6042503800B0007           mov byte [0xb8003], 0x07
+   243 000002EF 4C893C25[75050000]         mov qword [count], r15
+   244 000002F7 488B0425[7D020000]         mov rax, [pbs]
+   245 000002FF 4883C018                   add rax, 0x18
+   246 00000303 8B18                       mov ebx, [rax]
+   247 00000305 D1EB                       shr ebx, 1
+   248 00000307 D1E3                       shl ebx, 1
+   249 00000309 8918                       mov [rax], ebx
+   250                                  walt:
+   251 0000030B 8B18                       mov ebx, [rax]
+   252 0000030D 0FBAE30F                   bt ebx, 15
+   253 00000311 72F8                       jc walt
+   254 00000313 8B18                       mov ebx, [rax]
+   255 00000315 0FBAF304                   btr ebx, 4
+   256 00000319 8918                       mov [rax], ebx
+   257                                  aaah:
+   258 0000031B 8B18                       mov ebx, [rax]
+   259 0000031D 0FBAE30E                   bt ebx, 14
+   260 00000321 72F8                       jc aaah
+   261 00000323 B8FF9F0700                 mov rax, 0x79fff
+   262                                  zot:
+   263 00000328 4883C001                   add rax, 1
+   264 0000032C C60000                     mov byte [rax], 0
+   265 0000032F 483DFFA40700               cmp rax, 0x7a4ff
+   266 00000335 75F1                       jne zot
+   267 00000337 488B0425[7D020000]         mov rax, [pbs]
+   268 0000033F 4889C3                     mov rbx, rax
+   269 00000342 C70000A00700               mov dword [rax], 0x7a000
+   270 00000348 4883C004                   add rax, 0x4
+   271 0000034C C70000000000               mov dword [rax], 0
+   272 00000352 4883C004                   add rax, 0x4
+   273 00000356 C70000A40700               mov dword [rax], 0x7a400
+   274 0000035C 4883C30C                   add rbx, 0xc
+   275 00000360 C70300000000               mov dword [rbx], 0
+   276 00000366 4883EB0C                   sub rbx, 0xc
+   277 0000036A 4883C318                   add rbx, 0x18
+   278 0000036E 8B0B                       mov ecx, [rbx]
+   279 00000370 BA01000000                 mov edx, 1
+   280 00000375 C1E204                     shl edx, 4
+   281 00000378 09D1                       or ecx, edx
+   282 0000037A 890B                       mov [rbx], ecx
+   283 0000037C C604251100000045           mov byte [17], 69
+   284 00000384 4831C0                     xor rax, rax
+   285 00000387 C6042504800B0031           mov byte [0xb8004], '1'
+   286 0000038F C6042505800B0007           mov byte [0xb8005], 0x07
+   287 00000397 E805000000                 call drs
+   288 0000039C E94D080000                 jmp miguel
+   289                                  drs:
+   290 000003A1 C6042500A0070005           mov byte [0x7a000], 5
+   291 000003A9 C6042501A0070000           mov byte [0x7a001], 0
+   292 000003B1 66C7042502A0070001-        mov word [0x7a002], 1
+   292 000003BA 00                 
+   293 000003BB C7042504A007000000-        mov dword [0x7a004], 0
+   293 000003C4 0000               
+   294 000003C6 C7042508A0070000A5-        mov dword [0x7a008], 0x7a500
+   294 000003CF 0700               
+   295 000003D1 C704250CA007000000-        mov dword [0x7a00c], 0
+   295 000003DA 0000               
+   296 000003DC BA00A50700                 mov rdx, 0x7a500
+   297                                  zrr:
+   298 000003E1 C60200                     mov byte [rdx], 0
+   299 000003E4 4881FA90A50700             cmp rdx, 0x7a590
+   300 000003EB 7416                       je zre
+   301 000003ED 4883C201                   add rdx, 1
+   302 000003F1 EBEE                       jmp zrr
+   303 000003F3 C6042508800B0033           mov byte [0xb8008], '3'
+   304 000003FB C6042509800B0007           mov byte [0xb8009], 0x07
+   305                                  zre:
+   306 00000403 C6042500A5070027           mov byte [0x7a500], 0x27
+   307 0000040B C6042501A5070080           mov byte [0x7a501], 0x80
+   308 00000413 C6042502A5070025           mov byte [0x7a502], 0x25
+   309 0000041B C6042507A5070040           mov byte [0x7a507], 0x40
+   310 00000423 88042504A50700             mov byte [0x7a504], al
+   311 0000042A 48C1E808                   shr rax, 8
+   312 0000042E 88042505A50700             mov byte [0x7a505], al
+   313 00000435 48C1E808                   shr rax, 8
+   314 00000439 88042506A50700             mov byte [0x7a506], al
+   315 00000440 48C1E808                   shr rax, 8
+   316 00000444 88042508A50700             mov byte [0x7a508], al
+   317 0000044B 48C1E808                   shr rax, 8
+   318 0000044F 88042509A50700             mov byte [0x7a509], al
+   319 00000456 48C1E808                   shr rax, 8
+   320 0000045A 8804250AA50700             mov byte [0x7a50a], al
+   321 00000461 C604250CA5070001           mov byte [0x7a50c], 1
+   322 00000469 C604250DA5070000           mov byte [0x7a50d], 0
+   323 00000471 C7042580A5070000B0-        mov dword [0x7a580], 0x7b000
+   323 0000047A 0700               
+   324 0000047C C7042584A507000000-        mov dword [0x7a584], 0
+   324 00000485 0000               
+   325 00000487 C7042588A507000000-        mov dword [0x7a588], 0
+   325 00000490 0000               
+   326 00000492 B8FF010000                 mov eax, 511
+   327 00000497 BB01000000                 mov ebx, 1
+   328 0000049C C1E31F                     shl ebx, 31
+   329 0000049F 09D8                       or eax, ebx
+   330 000004A1 8904258CA50700             mov dword [0x7a58c], eax
+   331 000004A8 488B0425[7D020000]         mov rax, [pbs]
+   332 000004B0 4889C3                     mov rbx, rax
+   333 000004B3 4883C338                   add rbx, 0x38
+   334 000004B7 4883C018                   add rax, 0x18
+   335 000004BB 8B10                       mov edx, [rax]
+   336 000004BD 0FBAEA00                   bts edx, 0
+   337 000004C1 8910                       mov [rax], edx
+   338 000004C3 B901000000                 mov ecx, 1
+   339 000004C8 890B                       mov dword [rbx], ecx
+   340                                  aah_i_have_an_head_ache_from_writing_this_shit:
+   341 000004CA 8B0B                       mov ecx, [rbx]
+   342 000004CC 0FBAE100                   bt ecx, 0
+   343 000004D0 72F8                       jc aah_i_have_an_head_ache_from_writing_this_shit
+   344 000004D2 C3                         ret
+   345                                  tte:
+   346 000004D3 58                         pop rax
+   347 000004D4 5B                         pop rbx
+   348 000004D5 E952FDFFFF                 jmp tt
+   349                                  ttwo:
+   350 000004DA 41BE08000000               mov r14d, 0x8
+   351 000004E0 53                         push rbx
+   352 000004E1 4489C3                     mov ebx, r8d
+   353 000004E4 4509F0                     or r8d, r14d
+   354 000004E7 50                         push rax
+   355 000004E8 4831C0                     xor rax, rax
+   356 000004EB 4489C0                     mov eax, r8d
+   357 000004EE 66BAF80C                   mov dx, 0xcf8
+   358 000004F2 EF                         out dx, eax
+   359 000004F3 66BAFC0C                   mov dx, 0xcfc
+   360 000004F7 ED                         in eax, dx
+   361 000004F8 4189C6                     mov r14d, eax
+   362 000004FB C1E818                     shr eax, 24
+   363 000004FE 83F801                     cmp eax, 1
+   364 00000501 75D0                       jne tte
+   365 00000503 4489F0                     mov eax, r14d
+   366 00000506 C1E810                     shr eax, 16
+   367 00000509 25FF000000                 and eax, 0xff
+   368 0000050E 83F806                     cmp eax, 0x6
+   369 00000511 75C0                       jne tte
+   370 00000513 4489F0                     mov eax, r14d
+   371 00000516 C1E010                     shl eax, 16
+   372 00000519 C1E818                     shr eax, 24
+   373 0000051C 83F801                     cmp eax, 0x1
+   374 0000051F 75B2                       jne tte
+   375 00000521 41BE24000000               mov r14d, 0x24
+   376 00000527 41BF04000000               mov r15d, 0x4
+   377 0000052D 89D9                       mov ecx, ebx
+   378 0000052F 4409F9                     or ecx, r15d
+   379 00000532 66BAFC0C                   mov dx, 0xcfc
+   380 00000536 89C8                       mov eax, ecx
+   381 00000538 EF                         out dx, eax
+   382 00000539 66BAFC0C                   mov dx, 0xcfc
+   383 0000053D ED                         in eax, dx
+   384 0000053E 83C906                     or ecx, 0b110
+   385 00000541 66BAFC0C                   mov dx, 0xcfc
+   386 00000545 89C8                       mov eax, ecx
+   387 00000547 EF                         out dx, eax
+   388 00000548 89D8                       mov eax, ebx
+   389 0000054A 4409F0                     or eax, r14d
+   390 0000054D 66BAF80C                   mov dx, 0xcf8
+   391 00000551 EF                         out dx, eax
+   392 00000552 66BAFC0C                   mov dx, 0xcfc
+   393 00000556 ED                         in eax, dx
+   394 00000557 890425[6D050000]           mov [savior], eax
+   395 0000055E 58                         pop rax
+   396 0000055F 5B                         pop rbx
+   397 00000560 C604251000000043           mov byte [16], 67
+   398 00000568 E9EDFCFFFF                 jmp steb
+   399 0000056D 0000000000000000        savior: dq 0
+   400 00000575 0000000000000000        count: dq 0
+   401                                  hexbintrn:
+   402 0000057D C60425[4D060000]30         mov byte [netanyahu], 48
+   403 00000585 C60425[4E060000]78         mov byte [netanyahu + 1], 'x'
+   404 0000058D C60425[60060000]00         mov byte [netanyahu + 19], 0
+   405 00000595 41B812000000               mov r8, 18
+   406 0000059B 4989C1                     mov r9, rax
+   407 0000059E BB10000000                 mov rbx, 16
+   408                                  hexbenjamin:
+   409 000005A3 4831C0                     xor rax, rax
+   410 000005A6 4C89C8                     mov rax, r9
+   411 000005A9 4831D2                     xor rdx, rdx
+   412 000005AC 48F7F3                     div rbx
+   413 000005AF 4989C1                     mov r9, rax
+   414 000005B2 4889D0                     mov rax, rdx
+   415 000005B5 4983E801                   sub r8, 1
+   416 000005B9 4883F80A                   cmp rax, 10
+   417 000005BD 7430                       je jea
+   418 000005BF 4883F80B                   cmp rax, 11
+   419 000005C3 742E                       je jeb
+   420 000005C5 4883F80C                   cmp rax, 12
+   421 000005C9 742C                       je jec
+   422 000005CB 4883F80D                   cmp rax, 13
+   423 000005CF 742A                       je jed
+   424 000005D1 4883F80E                   cmp rax, 14
+   425 000005D5 7428                       je jee
+   426 000005D7 4883F80F                   cmp rax, 15
+   427 000005DB 7426                       je jef
+   428 000005DD 4883C030                   add rax, 48
+   429                                  hxlp:
+   430 000005E1 418880[4D060000]           mov byte [netanyahu + r8], al
+   431 000005E8 4983F802                   cmp r8, 2
+   432 000005EC 75B5                       jne hexbenjamin
+   433 000005EE C3                         ret
+   434                                  jea:
+   435 000005EF B041                       mov al, 'A'
+   436 000005F1 EBEE                       jmp hxlp
+   437                                  jeb:
+   438 000005F3 B042                       mov al, 'B'
+   439 000005F5 EBEA                       jmp hxlp
+   440                                  jec:
+   441 000005F7 B043                       mov al, 'C'
+   442 000005F9 EBE6                       jmp hxlp
+   443                                  jed:
+   444 000005FB B044                       mov al, 'D'
+   445 000005FD EBE2                       jmp hxlp
+   446                                  jee:
+   447 000005FF B045                       mov al, 'E'
+   448 00000601 EBDE                       jmp hxlp
+   449                                  jef:
+   450 00000603 B046                       mov al, 'F'
+   451 00000605 EBDA                       jmp hxlp
+   452                                  bintrn:
+   453 00000607 BB0A000000                 mov rbx, 10
+   454 0000060C 4831C9                     xor rcx, rcx
+   455 0000060F 49B8-                      mov r8, netanyahu
+   455 00000611 [4D06000000000000] 
+   456 00000619 4989C1                     mov r9, rax
+   457                                  idf:
+   458 0000061C 4831D2                     xor rdx, rdx
+   459 0000061F 4883C101                   add rcx, 1
+   460 00000623 48F7F3                     div rbx
+   461 00000626 4883F800                   cmp rax, 0
+   462 0000062A 75F0                       jne idf
+   463 0000062C 4901C8                     add r8, rcx
+   464 0000062F 498900                     mov [r8], rax
+   465 00000632 4C89C8                     mov rax, r9
+   466                                  benjamin:
+   467 00000635 4831D2                     xor rdx, rdx
+   468 00000638 4983E801                   sub r8, 1
+   469 0000063C 48F7F3                     div rbx
+   470 0000063F 4883C230                   add rdx, 48
+   471 00000643 418810                     mov byte [r8], dl
+   472 00000646 4883F800                   cmp rax, 0
+   473 0000064A 75E9                       jne benjamin
+   474 0000064C C3                         ret
+   475 0000064D 00<rep 16h>             netanyahu: times 22 db 0
+   476                                  ksnc:
+   477 00000663 50                         push rax
+   478 00000664 51                         push rcx
+   479 00000665 53                         push rbx
+   480 00000666 4831C0                     xor rax, rax
+   481 00000669 E460                       in al, 0x60
+   482 0000066B 88C1                       mov cl, al
+   483 0000066D B020                       mov al, 0x20
+   484 0000066F E620                       out 0x20, al
+   485 00000671 88C8                       mov al, cl
+   486 00000673 4883F800                   cmp rax, 0
+   487 00000677 0F848D010000               je err
+   488 0000067D 480FB61C25-                movzx rbx, byte [spcbf]
+   488 00000682 [000B0000]         
+   489 00000686 4883FB01                   cmp rbx, 1
+   490 0000068A 0F8487010000               je spcs
+   491 00000690 483DE0000000               cmp rax, 0xE0
+   492 00000696 0F8457040000               je special
+   493 0000069C 4883F81C                   cmp rax, 0x1C
+   494 000006A0 0F845B040000               je ent
+   495 000006A6 4883F80A                   cmp rax, 10
+   496 000006AA 0F8E9F010000               jle num
+   497 000006B0 4883F80B                   cmp rax, 11
+   498 000006B4 0F84A9010000               je zer
+   499 000006BA 4883F80C                   cmp rax, 0x0C
+   500 000006BE 0F84AC010000               je min
+   501 000006C4 4883F80D                   cmp rax, 0x0D
+   502 000006C8 0F84AF010000               je eql
+   503 000006CE 4883F80E                   cmp rax, 0x0E
+   504 000006D2 0F84B2010000               je del
+   505 000006D8 4883F839                   cmp rax, 0x39
+   506 000006DC 0F84DD010000               je spc
+   507 000006E2 4883F82A                   cmp rax, 0x2A
+   508 000006E6 0F84E0010000               je shft
+   509                                  letters:
+   510 000006EC 480FB61C25-                movzx rbx, byte [shift]
+   510 000006F1 [222A0000]         
+   511 000006F5 4883F81E                   cmp rax, 0x1E
+   512 000006F9 0F84EC010000               je keya
+   513 000006FF 4883F830                   cmp rax, 0x30
+   514 00000703 0F84F6010000               je keyb
+   515 00000709 4883F82E                   cmp rax, 0x2E
+   516 0000070D 0F8400020000               je keyc
+   517 00000713 4883F820                   cmp rax, 0x20
+   518 00000717 0F840A020000               je keyd
+   519 0000071D 4883F812                   cmp rax, 0x12
+   520 00000721 0F8414020000               je keye
+   521 00000727 4883F821                   cmp rax, 0x21
+   522 0000072B 0F841E020000               je keyf
+   523 00000731 4883F822                   cmp rax, 0x22
+   524 00000735 0F8428020000               je keyg
+   525 0000073B 4883F823                   cmp rax, 0x23
+   526 0000073F 0F8432020000               je keyh
+   527 00000745 4883F817                   cmp rax, 0x17
+   528 00000749 0F843C020000               je keyi
+   529 0000074F 4883F824                   cmp rax, 0x24
+   530 00000753 0F8446020000               je keyj
+   531 00000759 4883F825                   cmp rax, 0x25
+   532 0000075D 0F8450020000               je keyk
+   533 00000763 4883F826                   cmp rax, 0x26
+   534 00000767 0F845A020000               je keyl
+   535 0000076D 4883F832                   cmp rax, 0x32
+   536 00000771 0F8464020000               je keym
+   537 00000777 4883F831                   cmp rax, 0x31
+   538 0000077B 0F846E020000               je keyn
+   539 00000781 4883F818                   cmp rax, 0x18
+   540 00000785 0F8478020000               je keyo
+   541 0000078B 4883F819                   cmp rax, 0x19
+   542 0000078F 0F8482020000               je keyp
+   543 00000795 4883F810                   cmp rax, 0x10
+   544 00000799 0F848C020000               je keyq
+   545 0000079F 4883F813                   cmp rax, 0x13
+   546 000007A3 0F8496020000               je keyr
+   547 000007A9 4883F81F                   cmp rax, 0x1F
+   548 000007AD 0F84A0020000               je keys
+   549 000007B3 4883F814                   cmp rax, 0x14
+   550 000007B7 0F84AA020000               je keyt
+   551 000007BD 4883F816                   cmp rax, 0x16
+   552 000007C1 0F84B4020000               je keyu
+   553 000007C7 4883F82F                   cmp rax, 0x2F
+   554 000007CB 0F84BE020000               je keyv
+   555 000007D1 4883F811                   cmp rax, 0x11
+   556 000007D5 0F84C8020000               je keyw
+   557 000007DB 4883F82D                   cmp rax, 0x2D
+   558 000007DF 0F84D2020000               je keyx
+   559 000007E5 4883F815                   cmp rax, 0x15
+   560 000007E9 0F84DC020000               je keyy
+   561 000007EF 4883F82C                   cmp rax, 0x2C
+   562 000007F3 0F84E6020000               je keyz
+   563 000007F9 483DAA000000               cmp rax, 0xAA
+   564 000007FF 0F84D4000000               je shftrel
+   565 00000805 E9DC000000                 jmp norec
+   566                                  err:
+   567 0000080A 5B                         pop rbx
+   568 0000080B 59                         pop rcx
+   569 0000080C 58                         pop rax
+   570 0000080D C60425[000B0000]00         mov byte [spcbf], 0
+   571 00000815 48CF                       iretq
+   572                                  spcs:
+   573 00000817 4883F848                   cmp rax, 0x48
+   574 0000081B 7408                       je upar
+   575 0000081D 4883F850                   cmp rax, 0x50
+   576 00000821 7417                       je downar
+   577 00000823 EBE5                       jmp err
+   578                                  upar:
+   579 00000825 C60425[5B2A0000]22         mov byte [char], '"'
+   580 0000082D C60425[000B0000]00         mov byte [spcbf], 0
+   581 00000835 5B                         pop rbx
+   582 00000836 59                         pop rcx
+   583 00000837 58                         pop rax
+   584 00000838 48CF                       iretq
+   585                                  downar:
+   586 0000083A C60425[5B2A0000]27         mov byte [char], "'"
+   587 00000842 C60425[000B0000]00         mov byte [spcbf], 0
+   588 0000084A 5B                         pop rbx
+   589 0000084B 59                         pop rcx
+   590 0000084C 58                         pop rax
+   591 0000084D 48CF                       iretq
+   592                                  num:
+   593 0000084F 4883E801                   sub rax, 1
+   594 00000853 4883C030                   add rax, 48
+   595 00000857 880425[5B2A0000]           mov byte [char], al
+   596 0000085E 5B                         pop rbx
+   597 0000085F 59                         pop rcx
+   598 00000860 58                         pop rax
+   599 00000861 48CF                       iretq
+   600                                  zer:
+   601 00000863 C60425[5B2A0000]30         mov byte [char], 48
+   602 0000086B 5B                         pop rbx
+   603 0000086C 59                         pop rcx
+   604 0000086D 58                         pop rax
+   605 0000086E 48CF                       iretq
+   606                                  min:
+   607 00000870 C60425[5B2A0000]2D         mov byte [char], '-'
+   608 00000878 5B                         pop rbx
+   609 00000879 59                         pop rcx
+   610 0000087A 58                         pop rax
+   611 0000087B 48CF                       iretq
+   612                                  eql:
+   613 0000087D C60425[5B2A0000]3D         mov byte [char], '='
+   614 00000885 5B                         pop rbx
+   615 00000886 59                         pop rcx
+   616 00000887 58                         pop rax
+   617 00000888 48CF                       iretq
+   618                                  del:
+   619 0000088A 4831C0                     xor rax, rax
+   620 0000088D 488B0425[232A0000]         mov qword rax, [curzor]
+   621 00000895 483DE0810B00               cmp qword rax, (0xB8000 + 480)
+   622 0000089B 741D                       je stp
+   623 0000089D 8078FE3E                   cmp byte [rax - 2], '>'
+   624 000008A1 7417                       je stp
+   625 000008A3 4883E802                   sub qword rax, 2
+   626 000008A7 C6400170                   mov byte [rax + 1], 0x70
+   627 000008AB C6400300                   mov byte [rax + 3], 0x00
+   628 000008AF C60000                     mov byte [rax], 0x00
+   629 000008B2 48890425[232A0000]         mov qword [curzor], rax
+   630                                  stp:
+   631 000008BA 5B                         pop rbx
+   632 000008BB 59                         pop rcx
+   633 000008BC 58                         pop rax
+   634 000008BD 48CF                       iretq
+   635                                  spc:
+   636 000008BF C60425[5B2A0000]20         mov byte [char], 32
+   637 000008C7 5B                         pop rbx
+   638 000008C8 59                         pop rcx
+   639 000008C9 58                         pop rax
+   640 000008CA 48CF                       iretq
+   641                                  shft:
+   642 000008CC C60425[222A0000]20         mov byte [shift], 32
+   643 000008D4 5B                         pop rbx
+   644 000008D5 59                         pop rcx
+   645 000008D6 58                         pop rax
+   646 000008D7 48CF                       iretq
+   647                                  shftrel:
+   648 000008D9 C60425[222A0000]00         mov byte [shift], 0
+   649 000008E1 5B                         pop rbx
+   650 000008E2 59                         pop rcx
+   651 000008E3 58                         pop rax
+   652 000008E4 48CF                       iretq
+   653                                  norec:
+   654 000008E6 5B                         pop rbx
+   655 000008E7 59                         pop rcx
+   656 000008E8 58                         pop rax
+   657 000008E9 48CF                       iretq
+   658                                  keya:
+   659 000008EB B861000000                 mov rax, 97
+   660 000008F0 4829D8                     sub rax, rbx
+   661 000008F3 880425[5B2A0000]           mov byte [char], al
+   662 000008FA 5B                         pop rbx
+   663 000008FB 59                         pop rcx
+   664 000008FC 58                         pop rax
+   665 000008FD 48CF                       iretq
+   666                                  keyb:
+   667 000008FF B862000000                 mov rax, 98
+   668 00000904 4829D8                     sub rax, rbx
+   669 00000907 880425[5B2A0000]           mov byte [char], al
+   670 0000090E 5B                         pop rbx
+   671 0000090F 59                         pop rcx
+   672 00000910 58                         pop rax
+   673 00000911 48CF                       iretq
+   674                                  keyc:
+   675 00000913 B863000000                 mov rax, 99
+   676 00000918 4829D8                     sub rax, rbx
+   677 0000091B 880425[5B2A0000]           mov byte [char], al
+   678 00000922 5B                         pop rbx
+   679 00000923 59                         pop rcx
+   680 00000924 58                         pop rax
+   681 00000925 48CF                       iretq
+   682                                  keyd:
+   683 00000927 B864000000                 mov rax, 100
+   684 0000092C 4829D8                     sub rax, rbx
+   685 0000092F 880425[5B2A0000]           mov byte [char], al
+   686 00000936 5B                         pop rbx
+   687 00000937 59                         pop rcx
+   688 00000938 58                         pop rax
+   689 00000939 48CF                       iretq
+   690                                  keye:
+   691 0000093B B865000000                 mov rax, 101
+   692 00000940 4829D8                     sub rax, rbx
+   693 00000943 880425[5B2A0000]           mov byte [char], al
+   694 0000094A 5B                         pop rbx
+   695 0000094B 59                         pop rcx
+   696 0000094C 58                         pop rax
+   697 0000094D 48CF                       iretq
+   698                                  keyf:
+   699 0000094F B866000000                 mov rax, 102
+   700 00000954 4829D8                     sub rax, rbx
+   701 00000957 880425[5B2A0000]           mov byte [char], al
+   702 0000095E 5B                         pop rbx
+   703 0000095F 59                         pop rcx
+   704 00000960 58                         pop rax
+   705 00000961 48CF                       iretq
+   706                                  keyg:
+   707 00000963 B867000000                 mov rax, 103
+   708 00000968 4829D8                     sub rax, rbx
+   709 0000096B 880425[5B2A0000]           mov byte [char], al
+   710 00000972 5B                         pop rbx
+   711 00000973 59                         pop rcx
+   712 00000974 58                         pop rax
+   713 00000975 48CF                       iretq
+   714                                  keyh:
+   715 00000977 B868000000                 mov rax, 104
+   716 0000097C 4829D8                     sub rax, rbx
+   717 0000097F 880425[5B2A0000]           mov byte [char], al
+   718 00000986 5B                         pop rbx
+   719 00000987 59                         pop rcx
+   720 00000988 58                         pop rax
+   721 00000989 48CF                       iretq
+   722                                  keyi:
+   723 0000098B B869000000                 mov rax, 105
+   724 00000990 4829D8                     sub rax, rbx
+   725 00000993 880425[5B2A0000]           mov byte [char], al
+   726 0000099A 5B                         pop rbx
+   727 0000099B 59                         pop rcx
+   728 0000099C 58                         pop rax
+   729 0000099D 48CF                       iretq
+   730                                  keyj:
+   731 0000099F B86A000000                 mov rax, 106
+   732 000009A4 4829D8                     sub rax, rbx
+   733 000009A7 880425[5B2A0000]           mov byte [char], al
+   734 000009AE 5B                         pop rbx
+   735 000009AF 59                         pop rcx
+   736 000009B0 58                         pop rax
+   737 000009B1 48CF                       iretq
+   738                                  keyk:
+   739 000009B3 B86B000000                 mov rax, 107
+   740 000009B8 4829D8                     sub rax, rbx
+   741 000009BB 880425[5B2A0000]           mov byte [char], al
+   742 000009C2 5B                         pop rbx
+   743 000009C3 59                         pop rcx
+   744 000009C4 58                         pop rax
+   745 000009C5 48CF                       iretq
+   746                                  keyl:
+   747 000009C7 B86C000000                 mov rax, 108
+   748 000009CC 4829D8                     sub rax, rbx
+   749 000009CF 880425[5B2A0000]           mov byte [char], al
+   750 000009D6 5B                         pop rbx
+   751 000009D7 59                         pop rcx
+   752 000009D8 58                         pop rax
+   753 000009D9 48CF                       iretq
+   754                                  keym:
+   755 000009DB B86D000000                 mov rax, 109
+   756 000009E0 4829D8                     sub rax, rbx
+   757 000009E3 880425[5B2A0000]           mov byte [char], al
+   758 000009EA 5B                         pop rbx
+   759 000009EB 59                         pop rcx
+   760 000009EC 58                         pop rax
+   761 000009ED 48CF                       iretq
+   762                                  keyn:
+   763 000009EF B86E000000                 mov rax, 110
+   764 000009F4 4829D8                     sub rax, rbx
+   765 000009F7 880425[5B2A0000]           mov byte [char], al
+   766 000009FE 5B                         pop rbx
+   767 000009FF 59                         pop rcx
+   768 00000A00 58                         pop rax
+   769 00000A01 48CF                       iretq
+   770                                  keyo:
+   771 00000A03 B86F000000                 mov rax, 111
+   772 00000A08 4829D8                     sub rax, rbx
+   773 00000A0B 880425[5B2A0000]           mov byte [char], al
+   774 00000A12 5B                         pop rbx
+   775 00000A13 59                         pop rcx
+   776 00000A14 58                         pop rax
+   777 00000A15 48CF                       iretq
+   778                                  keyp:
+   779 00000A17 B870000000                 mov rax, 112
+   780 00000A1C 4829D8                     sub rax, rbx
+   781 00000A1F 880425[5B2A0000]           mov byte [char], al
+   782 00000A26 5B                         pop rbx
+   783 00000A27 59                         pop rcx
+   784 00000A28 58                         pop rax
+   785 00000A29 48CF                       iretq
+   786                                  keyq:
+   787 00000A2B B871000000                 mov rax, 113
+   788 00000A30 4829D8                     sub rax, rbx
+   789 00000A33 880425[5B2A0000]           mov byte [char], al
+   790 00000A3A 5B                         pop rbx
+   791 00000A3B 59                         pop rcx
+   792 00000A3C 58                         pop rax
+   793 00000A3D 48CF                       iretq
+   794                                  keyr:
+   795 00000A3F B872000000                 mov rax, 114
+   796 00000A44 4829D8                     sub rax, rbx
+   797 00000A47 880425[5B2A0000]           mov byte [char], al
+   798 00000A4E 5B                         pop rbx
+   799 00000A4F 59                         pop rcx
+   800 00000A50 58                         pop rax
+   801 00000A51 48CF                       iretq
+   802                                  keys:
+   803 00000A53 B873000000                 mov rax, 115
+   804 00000A58 4829D8                     sub rax, rbx
+   805 00000A5B 880425[5B2A0000]           mov byte [char], al
+   806 00000A62 5B                         pop rbx
+   807 00000A63 59                         pop rcx
+   808 00000A64 58                         pop rax
+   809 00000A65 48CF                       iretq
+   810                                  keyt:
+   811 00000A67 B874000000                 mov rax, 116
+   812 00000A6C 4829D8                     sub rax, rbx
+   813 00000A6F 880425[5B2A0000]           mov byte [char], al
+   814 00000A76 5B                         pop rbx
+   815 00000A77 59                         pop rcx
+   816 00000A78 58                         pop rax
+   817 00000A79 48CF                       iretq
+   818                                  keyu:
+   819 00000A7B B875000000                 mov rax, 117
+   820 00000A80 4829D8                     sub rax, rbx
+   821 00000A83 880425[5B2A0000]           mov byte [char], al
+   822 00000A8A 5B                         pop rbx
+   823 00000A8B 59                         pop rcx
+   824 00000A8C 58                         pop rax
+   825 00000A8D 48CF                       iretq
+   826                                  keyv:
+   827 00000A8F B876000000                 mov rax, 118
+   828 00000A94 4829D8                     sub rax, rbx
+   829 00000A97 880425[5B2A0000]           mov byte [char], al
+   830 00000A9E 5B                         pop rbx
+   831 00000A9F 59                         pop rcx
+   832 00000AA0 58                         pop rax
+   833 00000AA1 48CF                       iretq
+   834                                  keyw:
+   835 00000AA3 B877000000                 mov rax, 119
+   836 00000AA8 4829D8                     sub rax, rbx
+   837 00000AAB 880425[5B2A0000]           mov byte [char], al
+   838 00000AB2 5B                         pop rbx
+   839 00000AB3 59                         pop rcx
+   840 00000AB4 58                         pop rax
+   841 00000AB5 48CF                       iretq
+   842                                  keyx:
+   843 00000AB7 B878000000                 mov rax, 120
+   844 00000ABC 4829D8                     sub rax, rbx
+   845 00000ABF 880425[5B2A0000]           mov byte [char], al
+   846 00000AC6 5B                         pop rbx
+   847 00000AC7 59                         pop rcx
+   848 00000AC8 58                         pop rax
+   849 00000AC9 48CF                       iretq
+   850                                  keyy:
+   851 00000ACB B879000000                 mov rax, 121
+   852 00000AD0 4829D8                     sub rax, rbx
+   853 00000AD3 880425[5B2A0000]           mov byte [char], al
+   854 00000ADA 5B                         pop rbx
+   855 00000ADB 59                         pop rcx
+   856 00000ADC 58                         pop rax
+   857 00000ADD 48CF                       iretq
+   858                                  keyz:
+   859 00000ADF B87A000000                 mov rax, 122
+   860 00000AE4 4829D8                     sub rax, rbx
+   861 00000AE7 880425[5B2A0000]           mov byte [char], al
+   862 00000AEE 5B                         pop rbx
+   863 00000AEF 59                         pop rcx
+   864 00000AF0 58                         pop rax
+   865 00000AF1 48CF                       iretq
+   866                                  special:
+   867 00000AF3 C60425[000B0000]01         mov byte [spcbf], 1
+   868 00000AFB 5B                         pop rbx
+   869 00000AFC 59                         pop rcx
+   870 00000AFD 58                         pop rax
+   871 00000AFE 48CF                       iretq
+   872 00000B00 00                      spcbf: db 0
+   873                                  ent:
+   874 00000B01 C60425[5B2A0000]2A         mov byte [char], '*'
+   875 00000B09 5B                         pop rbx
+   876 00000B0A 59                         pop rcx
+   877 00000B0B 58                         pop rax
+   878 00000B0C 48CF                       iretq
+   879                                  cpritn:
+   880 00000B0E 41BE01000000               mov r14, 1
+   881                                  cpritnn:
+   882 00000B14 8A02                       mov byte al, [rdx]
+   883 00000B16 3C00                       cmp al, 0
+   884 00000B18 7437                       je ced
+   885 00000B1A 488B1C25[232A0000]         mov rbx, [curzor]
+   886 00000B22 8803                       mov byte [rbx], al
+   887 00000B24 884B01                     mov byte [rbx + 1], cl
+   888 00000B27 4883C302                   add rbx, 2
+   889 00000B2B 48891C25[232A0000]         mov [curzor], rbx
+   890 00000B33 4883C201                   add rdx, 1
+   891 00000B37 4881FB9F8F0B00             cmp rbx, 0xb8f9f
+   892 00000B3E 7609                       jna plees
+   893 00000B40 51                         push rcx
+   894 00000B41 52                         push rdx
+   895 00000B42 E8A4030000                 call dnr
+   896 00000B47 5A                         pop rdx
+   897 00000B48 59                         pop rcx
+   898                                  plees:
+   899 00000B49 4989CA                     mov r10, rcx
+   900 00000B4C 4989D3                     mov r11, rdx
+   901 00000B4F EBC3                       jmp cpritnn
+   902                                  ced:
+   903 00000B51 4D31F6                     xor r14, r14
+   904 00000B54 C3                         ret
+   905                                  cls:
+   906 00000B55 B8E0810B00                 mov rax, (0xB8000 + 480)
+   907                                  lop:
+   908 00000B5A C60000                     mov byte [rax], 0x00
+   909 00000B5D 483DA08F0B00               cmp rax, 0xB8FA0
+   910 00000B63 742A                       je ngeer
+   911 00000B65 4883C001                   add rax, 1
+   912 00000B69 EBEF                       jmp lop
+   913 00000B6B 4831D2                     xor rdx, rdx
+   914 00000B6E B800009000                 mov rax, kniha
+   915 00000B73 48890425[FB2E0000]         mov qword [relad], rax
+   916                                  lup:
+   917 00000B7B C60000                     mov byte [rax], 0
+   918 00000B7E 4883C001                   add rax, 1
+   919 00000B82 4883C201                   add rdx, 1
+   920 00000B86 4881FA803E0000             cmp rdx, 16000
+   921 00000B8D 75EC                       jne lup
+   922                                  ngeer:
+   923 00000B8F 48C70425[232A0000]-        mov qword [curzor], (0xB8000 + 480)
+   923 00000B97 E0810B00           
+   924 00000B9B C3                         ret
+   925                                  cmper:
+   926 00000B9C 4831C9                     xor rcx, rcx
+   927 00000B9F 4831D2                     xor rdx, rdx
+   928 00000BA2 8A08                       mov byte cl, [rax]
+   929 00000BA4 8A13                       mov byte dl, [rbx]
+   930 00000BA6 80FA00                     cmp dl, 0
+   931 00000BA9 7414                       je sucend
+   932 00000BAB 38D1                       cmp cl, dl
+   933 00000BAD 750A                       jne badd
+   934 00000BAF 4883C002                   add rax, 2
+   935 00000BB3 4883C301                   add rbx, 1
+   936 00000BB7 EBE3                       jmp cmper
+   937                                  badd:
+   938 00000BB9 B800000000                 mov rax, 0
+   939 00000BBE C3                         ret
+   940                                  sucend:
+   941 00000BBF B801000000                 mov rax, 1
+   942 00000BC4 C3                         ret
+   943                                  cmp:
+   944 00000BC5 4831C9                     xor rcx, rcx
+   945 00000BC8 4831D2                     xor rdx, rdx
+   946 00000BCB 8A08                       mov byte cl, [rax]
+   947 00000BCD 8A13                       mov byte dl, [rbx]
+   948 00000BCF 80FA00                     cmp dl, 0
+   949 00000BD2 7414                       je sucendd
+   950 00000BD4 38D1                       cmp cl, dl
+   951 00000BD6 750A                       jne baddd
+   952 00000BD8 4883C001                   add rax, 1
+   953 00000BDC 4883C301                   add rbx, 1
+   954 00000BE0 EBE3                       jmp cmp
+   955                                  baddd:
+   956 00000BE2 B800000000                 mov rax, 0
+   957 00000BE7 C3                         ret
+   958                                  sucendd:
+   959 00000BE8 B801000000                 mov rax, 1
+   960 00000BED C3                         ret
+   961                                  miguel:
+   962 00000BEE 4831D2                     xor rdx, rdx
+   963 00000BF1 4831C0                     xor rax, rax
+   964 00000BF4 66BAD403                   mov dx, 0x3d4
+   965 00000BF8 B00A                       mov al, 0xa
+   966 00000BFA EE                         out dx, al
+   967 00000BFB 4831C0                     xor rax, rax
+   968 00000BFE 4831D2                     xor rdx, rdx
+   969 00000C01 66BAD503                   mov dx, 0x3d5
+   970 00000C05 B020                       mov al, 0x20
+   971 00000C07 EE                         out dx, al
+   972 00000C08 E848FFFFFF                 call cls
+   973 00000C0D 48C70425[232A0000]-        mov qword [curzor], 0xB8000
+   973 00000C15 00800B00           
+   974 00000C19 48BA-                      mov rdx, head
+   974 00000C1B [7E2A000000000000] 
+   975 00000C23 4831C9                     xor rcx, rcx
+   976 00000C26 B11F                       mov cl, 0x1F
+   977 00000C28 E8E1FEFFFF                 call cpritn
+   978 00000C2D B011                       mov al, 0x11
+   979 00000C2F E620                       out 0x20, al
+   980 00000C31 E6A0                       out 0xA0, al
+   981 00000C33 B020                       mov al, 0x20
+   982 00000C35 E621                       out 0x21, al
+   983 00000C37 B028                       mov al, 0x28
+   984 00000C39 E6A1                       out 0xA1, al
+   985 00000C3B B004                       mov al, 0x04
+   986 00000C3D E621                       out 0x21, al
+   987 00000C3F B002                       mov al, 0x02
+   988 00000C41 E6A1                       out 0xA1, al
+   989 00000C43 B001                       mov al, 0x01
+   990 00000C45 E621                       out 0x21, al
+   991 00000C47 E6A1                       out 0xA1, al
+   992 00000C49 B0FD                       mov al, 0xFD
+   993 00000C4B E621                       out 0x21, al
+   994 00000C4D B0FF                       mov al, 0xFF
+   995 00000C4F E6A1                       out 0xA1, al
+   996 00000C51 48B8-                      mov rax, ksnc
+   996 00000C53 [6306000000000000] 
+   997 00000C5B BF20040800                 mov rdi, 0x80420
+   998 00000C60 668907                     mov [rdi], ax
+   999 00000C63 48C1E810                   shr rax, 16
+  1000 00000C67 66C747021800               mov word [rdi + 2], CODE67_SEG
+  1001 00000C6D C6470400                   mov byte [rdi + 4], 0
+  1002 00000C71 C647058E                   mov byte [rdi + 5], 0x8E
+  1003 00000C75 66894706                   mov [rdi + 6], ax
+  1004 00000C79 48C1E810                   shr rax, 16
+  1005 00000C7D 894708                     mov [rdi + 8], eax
+  1006 00000C80 C7470C00000000             mov dword [rdi + 12], 0x00000000
+  1007 00000C87 48891C25[B32E0000]         mov qword [cmdc], rbx
+  1008 00000C8F 48C70425[FB2E0000]-        mov qword [relad], kniha
+  1008 00000C97 00009000           
+  1009 00000C9B 0F011C25[742A0000]         lidt [idttbl]
+  1010 00000CA3 FB                         sti
+  1011 00000CA4 48B8-                      mov rax, savior
+  1011 00000CA6 [6D05000000000000] 
+  1012 00000CAE 4889042500000000           mov [0], rax
+  1013                                  tets:
+  1014 00000CB6 48BA-                      mov rdx, usert
+  1014 00000CB8 [922E000000000000] 
+  1015 00000CC0 4831C9                     xor rcx, rcx
+  1016 00000CC3 B10A                       mov cl, 0x0A
+  1017 00000CC5 E844FEFFFF                 call cpritn
+  1018 00000CCA 488B0425[232A0000]         mov qword rax, [curzor]
+  1019 00000CD2 48890425[B32E0000]         mov qword [cmdc], rax
+  1020                                  testt:
+  1021 00000CDA 8A1425[5B2A0000]           mov dl, byte [char]
+  1022 00000CE1 80FA00                     cmp dl, 0
+  1023 00000CE4 74F4                       je testt
+  1024 00000CE6 80FA22                     cmp dl, '"'
+  1025 00000CE9 0F84EE000000               je upr
+  1026 00000CEF 80FA27                     cmp dl, "'"
+  1027 00000CF2 0F84F3010000               je dnr
+  1028 00000CF8 4831C0                     xor rax, rax
+  1029 00000CFB 488B0425[232A0000]         mov qword rax, [curzor]
+  1030 00000D03 483DA08F0B00               cmp rax, 0xb8fa0
+  1031 00000D09 774D                       ja panic
+  1032 00000D0B 483DE0810B00               cmp rax, 0xb8000 + 480
+  1033 00000D11 7225                       jb pann
+  1034 00000D13 80FA2A                     cmp dl, "*"
+  1035 00000D16 7463                       je eter
+  1036 00000D18 8810                       mov byte [rax], dl
+  1037 00000D1A C6400107                   mov byte [rax + 1], 0x07
+  1038 00000D1E 4883C002                   add qword rax, 2
+  1039 00000D22 48890425[232A0000]         mov qword [curzor], rax
+  1040 00000D2A C6400170                   mov byte [rax +1], 0x70
+  1041 00000D2E C60425[5B2A0000]00         mov byte [char], 0
+  1042 00000D36 EBA2                       jmp testt
+  1043                                  pann:
+  1044 00000D38 41BE01000000               mov r14, 1
+  1045 00000D3E E89A000000                 call upr
+  1046 00000D43 488B0425[232A0000]         mov rax, qword [curzor]
+  1047 00000D4B 483DE0810B00               cmp rax, 0xB81E0
+  1048 00000D51 72E5                       jb pann
+  1049 00000D53 4D31F6                     xor r14, r14
+  1050 00000D56 EB82                       jmp testt
+  1051                                  panic:
+  1052 00000D58 41BE01000000               mov r14, 1
+  1053 00000D5E E888010000                 call dnr
+  1054 00000D63 488B0425[232A0000]         mov rax, qword [curzor]
+  1055 00000D6B 483DA08F0B00               cmp rax, 0xB8fa0
+  1056 00000D71 77E5                       ja panic
+  1057 00000D73 4D31F6                     xor r14, r14
+  1058 00000D76 E95FFFFFFF                 jmp testt
+  1059                                  eter:
+  1060 00000D7B 488B0425[232A0000]         mov qword rax, [curzor]
+  1061 00000D83 482B0425[B32E0000]         sub rax, [cmdc]
+  1062 00000D8B 48890425[AB2E0000]         mov [clen], rax
+  1063 00000D93 488B0425[232A0000]         mov qword rax, [curzor]
+  1064 00000D9B C6400100                   mov byte [rax + 1], 0x00
+  1065 00000D9F 4831C0                     xor rax, rax
+  1066 00000DA2 488B0425[232A0000]         mov qword rax, [curzor]
+  1067 00000DAA 482D00800B00               sub rax, 0xB8000
+  1068 00000DB0 4831D2                     xor rdx, rdx
+  1069 00000DB3 BBA0000000                 mov rbx, 160
+  1070 00000DB8 48F7F3                     div rbx
+  1071 00000DBB 4883C001                   add rax, 1
+  1072 00000DBF 48F7E3                     mul rbx
+  1073 00000DC2 480500800B00               add rax, 0xB8000
+  1074 00000DC8 48890425[232A0000]         mov qword [curzor], rax 
+  1075 00000DD0 C60425[5B2A0000]00         mov byte [char], 0
+  1076 00000DD8 E97F030000                 jmp systm
+  1077                                  upr:
+  1078 00000DDD 4C89C0                     mov rax, r8
+  1079 00000DE0 4C89CB                     mov rbx, r9
+  1080 00000DE3 4C89D1                     mov rcx, r10
+  1081 00000DE6 4C89DA                     mov rdx, r11
+  1082 00000DE9 BE008F0B00                 mov rsi, (0xB8000 + 3840)
+  1083 00000DEE BFA0000000                 mov rdi, mbf
+  1084 00000DF3 4831C9                     xor rcx, rcx
+  1085 00000DF6 4831D2                     xor rdx, rdx
+  1086                                  copyp:
+  1087 00000DF9 4883C201                   add rdx, 1
+  1088 00000DFD 8A0E                       mov cl, [rsi]
+  1089 00000DFF 880F                       mov [rdi], cl
+  1090 00000E01 4883C601                   add rsi, 1
+  1091 00000E05 4883C701                   add rdi, 1
+  1092 00000E09 4881FAA0000000             cmp rdx, 160
+  1093 00000E10 75E7                       jne copyp
+  1094                                  shifter:
+  1095 00000E12 BEA08F0B00                 mov rsi, (0xB8000 + 4000)
+  1096 00000E17 BF008F0B00                 mov rdi, (0xB8000 + 3840)
+  1097 00000E1C 4831D2                     xor rdx, rdx
+  1098 00000E1F 4831C9                     xor rcx, rcx
+  1099                                  shiflp:
+  1100 00000E22 4883C201                   add rdx, 1
+  1101 00000E26 8A0F                       mov cl, [rdi]
+  1102 00000E28 880E                       mov [rsi], cl
+  1103 00000E2A 4883EF01                   sub rdi, 1
+  1104 00000E2E 4883EE01                   sub rsi, 1
+  1105 00000E32 4881FAC00D0000             cmp rdx, 3520
+  1106 00000E39 75E7                       jne shiflp
+  1107                                  fsmv:
+  1108 00000E3B 488B3425[FB2E0000]         mov rsi, [relad]
+  1109 00000E43 BFE0810B00                 mov rdi, (0xB8000 + 480)
+  1110 00000E48 4881EEA0000000             sub rsi, 160
+  1111 00000E4F 48893425[FB2E0000]         mov [relad], rsi
+  1112 00000E57 4831D2                     xor rdx, rdx
+  1113 00000E5A 4831C9                     xor rcx, rcx
+  1114                                  fsmlp:
+  1115 00000E5D 4883C201                   add rdx, 1
+  1116 00000E61 8A0E                       mov cl, [rsi]
+  1117 00000E63 880F                       mov [rdi], cl
+  1118 00000E65 4883C601                   add rsi, 1
+  1119 00000E69 4883C701                   add rdi, 1
+  1120 00000E6D 4881FAA0000000             cmp rdx, 160
+  1121 00000E74 75E7                       jne fsmlp
+  1122 00000E76 BEA0000000                 mov rsi, mbf
+  1123 00000E7B 488B3C25[FB2E0000]         mov rdi, [relad]
+  1124 00000E83 4831D2                     xor rdx, rdx
+  1125 00000E86 4831C9                     xor rcx, rcx
+  1126                                  savlp:
+  1127 00000E89 4883C201                   add rdx, 1
+  1128 00000E8D 8A0E                       mov cl, [rsi]
+  1129 00000E8F 880F                       mov [rdi], cl
+  1130 00000E91 4883C701                   add rdi, 1
+  1131 00000E95 4883C601                   add rsi, 1
+  1132 00000E99 4881FAA0000000             cmp rdx, 160
+  1133 00000EA0 75E7                       jne savlp
+  1134 00000EA2 C60425[5B2A0000]00         mov byte [char], 0
+  1135 00000EAA 488B0425[B32E0000]         mov qword rax, [cmdc]
+  1136 00000EB2 488B1C25[232A0000]         mov qword rbx, [curzor]
+  1137 00000EBA 4805A0000000               add rax, 160
+  1138 00000EC0 4881C3A0000000             add rbx, 160
+  1139 00000EC7 48890425[B32E0000]         mov qword [cmdc], rax
+  1140 00000ECF 48891C25[232A0000]         mov qword [curzor], rbx
+  1141 00000ED7 4983FE01                   cmp r14, 1
+  1142 00000EDB 740D                       je cal
+  1143 00000EDD C60425[5B2A0000]00         mov byte [char], 0
+  1144 00000EE5 E9F0FDFFFF                 jmp testt
+  1145                                  cal:
+  1146 00000EEA C3                         ret
+  1147                                  dnr:
+  1148 00000EEB BEE0810B00                 mov rsi, (0xB8000 + 480)
+  1149 00000EF0 BFA0000000                 mov rdi, mbf
+  1150 00000EF5 4831C9                     xor rcx, rcx
+  1151 00000EF8 4831D2                     xor rdx, rdx
+  1152                                  cplp:
+  1153 00000EFB 4883C201                   add rdx, 1
+  1154 00000EFF 8A0E                       mov cl, [rsi]
+  1155 00000F01 880F                       mov [rdi], cl
+  1156 00000F03 4883C601                   add rsi, 1
+  1157 00000F07 4883C701                   add rdi, 1
+  1158 00000F0B 4881FAA0000000             cmp rdx, 160
+  1159 00000F12 75E7                       jne cplp
+  1160                                  sfts:
+  1161 00000F14 BE80820B00                 mov rsi, (0xB8000 + 640)
+  1162 00000F19 BFE0810B00                 mov rdi, (0xB8000 + 480)
+  1163 00000F1E 4831D2                     xor rdx, rdx
+  1164 00000F21 4831C9                     xor rcx, rcx
+  1165                                  sftlp:
+  1166 00000F24 4883C201                   add rdx, 1
+  1167 00000F28 8A0E                       mov cl, [rsi]
+  1168 00000F2A 880F                       mov [rdi], cl
+  1169 00000F2C 4883C701                   add rdi, 1
+  1170 00000F30 4883C601                   add rsi, 1
+  1171 00000F34 4881FAC00D0000             cmp rdx, 3520
+  1172 00000F3B 75E7                       jne sftlp
+  1173                                  lstmv:
+  1174 00000F3D 488B3425[FB2E0000]         mov rsi, [relad]
+  1175 00000F45 BF008F0B00                 mov rdi, (0xB8000 + 3840)
+  1176 00000F4A 4831D2                     xor rdx, rdx
+  1177 00000F4D 4831C9                     xor rcx, rcx
+  1178                                  lstlp:
+  1179 00000F50 4883C201                   add rdx, 1
+  1180 00000F54 8A0E                       mov cl, [rsi]
+  1181 00000F56 880F                       mov [rdi], cl
+  1182 00000F58 4883C601                   add rsi, 1
+  1183 00000F5C 4883C701                   add rdi, 1
+  1184 00000F60 4881FAA0000000             cmp rdx, 160
+  1185 00000F67 75E7                       jne lstlp
+  1186 00000F69 BEA0000000                 mov rsi, mbf
+  1187 00000F6E 488B3C25[FB2E0000]         mov rdi, [relad]
+  1188 00000F76 4831D2                     xor rdx, rdx
+  1189 00000F79 4831C9                     xor rcx, rcx
+  1190                                  svlp:
+  1191 00000F7C 4883C201                   add rdx, 1
+  1192 00000F80 8A0E                       mov cl, [rsi]
+  1193 00000F82 880F                       mov [rdi], cl
+  1194 00000F84 4883C701                   add rdi, 1
+  1195 00000F88 4883C601                   add rsi, 1
+  1196 00000F8C 4881FAA0000000             cmp rdx, 160
+  1197 00000F93 75E7                       jne svlp
+  1198 00000F95 48893C25[FB2E0000]         mov qword [relad], rdi
+  1199 00000F9D 488B0425[B32E0000]         mov qword rax, [cmdc]
+  1200 00000FA5 488B1C25[232A0000]         mov qword rbx, [curzor]
+  1201 00000FAD 482DA0000000               sub rax, 160
+  1202 00000FB3 4881EBA0000000             sub rbx, 160
+  1203 00000FBA 48890425[B32E0000]         mov qword [cmdc], rax
+  1204 00000FC2 48891C25[232A0000]         mov qword [curzor], rbx
+  1205 00000FCA C60425[5B2A0000]00         mov byte [char], 0
+  1206 00000FD2 4983FE01                   cmp r14, 1
+  1207 00000FD6 7405                       je col
+  1208 00000FD8 E9FDFCFFFF                 jmp testt
+  1209                                  col:
+  1210 00000FDD C3                         ret
+  1211                                  gatherer:
+  1212 00000FDE 4D31D2                     xor r10, r10
+  1213 00000FE1 4831C0                     xor rax, rax
+  1214 00000FE4 488B1C25[B32E0000]         mov rbx, [cmdc]
+  1215 00000FEC 48031C25[AB2E0000]         add rbx, [clen]
+  1216 00000FF4 807A0278                   cmp byte [rdx + 2], 'x'
+  1217 00000FF8 744C                       je itshex
+  1218 00000FFA 807A0258                   cmp byte [rdx + 2], 'X'
+  1219 00000FFE 7446                       je itshex
+  1220 00001000 B90A000000                 mov rcx, 10
+  1221 00001005 4D31C0                     xor r8, r8
+  1222 00001008 4D31C9                     xor r9, r9
+  1223                                  getlp:
+  1224 0000100B 4839DA                     cmp rdx, rbx
+  1225 0000100E 742B                       je konex
+  1226 00001010 4C0FB602                   movzx r8, byte [rdx]
+  1227 00001014 4983F820                   cmp r8, ' '
+  1228 00001018 0F84EF000000               je andr
+  1229 0000101E 4983F830                   cmp r8, 48
+  1230 00001022 7218                       jb sike
+  1231 00001024 4983F839                   cmp r8, 57
+  1232 00001028 7712                       ja sike
+  1233 0000102A 4983E830                   sub r8, 48
+  1234 0000102E 480FAFC1                   imul rax, rcx
+  1235 00001032 4C01C0                     add rax, r8
+  1236 00001035 4883C202                   add rdx, 2
+  1237 00001039 EBD0                       jmp getlp
+  1238                                  konex:
+  1239 0000103B C3                         ret
+  1240                                  sike:
+  1241 0000103C 4D31C9                     xor r9, r9
+  1242 0000103F 41B901000000               mov r9, 1
+  1243 00001045 C3                         ret
+  1244                                  itshex:
+  1245 00001046 4D31C9                     xor r9, r9
+  1246 00001049 4883C204                   add rdx, 4
+  1247 0000104D B910000000                 mov rcx, 16
+  1248 00001052 41BA01000000               mov r10, 1
+  1249                                  gtlp:
+  1250 00001058 4839DA                     cmp rdx, rbx
+  1251 0000105B 74DE                       je konex
+  1252 0000105D 4C0FB602                   movzx r8, byte [rdx]
+  1253 00001061 4983F820                   cmp r8, ' '
+  1254 00001065 0F84A2000000               je andr
+  1255 0000106B 4983F830                   cmp r8, 48
+  1256 0000106F 72CB                       jb sike
+  1257 00001071 4983F866                   cmp r8, 102
+  1258 00001075 77C5                       ja sike
+  1259 00001077 4983F861                   cmp r8, 'a'
+  1260 0000107B 7460                       je hea
+  1261 0000107D 4983F841                   cmp r8, 'A'
+  1262 00001081 745A                       je hea
+  1263 00001083 4983F862                   cmp r8, 'b'
+  1264 00001087 745C                       je heb
+  1265 00001089 4983F842                   cmp r8, 'B'
+  1266 0000108D 7456                       je heb
+  1267 0000108F 4983F863                   cmp r8, 'c'
+  1268 00001093 7458                       je hec
+  1269 00001095 4983F843                   cmp r8, 'C'
+  1270 00001099 7452                       je hec
+  1271 0000109B 4983F864                   cmp r8, 'd'
+  1272 0000109F 7454                       je hed
+  1273 000010A1 4983F844                   cmp r8, 'D'
+  1274 000010A5 744E                       je hed
+  1275 000010A7 4983F865                   cmp r8, 'e'
+  1276 000010AB 7450                       je hee
+  1277 000010AD 4983F845                   cmp r8, 'E'
+  1278 000010B1 744A                       je hee
+  1279 000010B3 4983F866                   cmp r8, 'f'
+  1280 000010B7 744C                       je hef
+  1281 000010B9 4983F846                   cmp r8, 'F'
+  1282 000010BD 7446                       je hef
+  1283 000010BF 4983F839                   cmp r8, 57
+  1284 000010C3 0F8773FFFFFF               ja sike
+  1285 000010C9 4983E830                   sub r8, 48
+  1286                                  reter:
+  1287 000010CD 480FAFC1                   imul rax, rcx
+  1288 000010D1 4C01C0                     add rax, r8
+  1289 000010D4 4883C202                   add rdx, 2
+  1290 000010D8 E97BFFFFFF                 jmp gtlp
+  1291                                  hea:
+  1292 000010DD 41B80A000000               mov r8, 10
+  1293 000010E3 EBE8                       jmp reter
+  1294                                  heb:
+  1295 000010E5 41B80B000000               mov r8, 11
+  1296 000010EB EBE0                       jmp reter
+  1297                                  hec:
+  1298 000010ED 41B80C000000               mov r8, 12
+  1299 000010F3 EBD8                       jmp reter
+  1300                                  hed:
+  1301 000010F5 41B80D000000               mov r8, 13
+  1302 000010FB EBD0                       jmp reter
+  1303                                  hee:
+  1304 000010FD 41B80E000000               mov r8, 14
+  1305 00001103 EBC8                       jmp reter
+  1306                                  hef:
+  1307 00001105 41B80F000000               mov r8, 15
+  1308 0000110B EBC0                       jmp reter
+  1309                                  andr:
+  1310 0000110D 41B902000000               mov r9, 2
+  1311 00001113 C3                         ret
+  1312                                  tim:
+  1313 00001114 4D31C9                     xor r9, r9
+  1314 00001117 B00A                       mov al, 0x0a
+  1315 00001119 E670                       out 0x70, al
+  1316 0000111B E471                       in al, 0x71
+  1317 0000111D A880                       test al, 0x80
+  1318 0000111F 75F3                       jnz tim
+  1319 00001121 B00B                       mov al, 0xb
+  1320 00001123 E670                       out 0x70, al
+  1321 00001125 E471                       in al, 0x71
+  1322 00001127 A804                       test al, 0x4
+  1323 00001129 7506                       jnz binry
+  1324 0000112B 41B901000000               mov r9, 1
+  1325                                     binry:
+  1326 00001131 4831C0                     xor rax, rax
+  1327 00001134 4831DB                     xor rbx, rbx
+  1328 00001137 4831C9                     xor rcx, rcx
+  1329 0000113A 4831D2                     xor rdx, rdx
+  1330 0000113D B007                       mov al, 0x7
+  1331 0000113F E670                       out 0x70, al
+  1332 00001141 E471                       in al, 0x71
+  1333 00001143 88C2                       mov dl, al
+  1334 00001145 B004                       mov al, 0x4
+  1335 00001147 E670                       out 0x70, al
+  1336 00001149 E471                       in al, 0x71
+  1337 0000114B 88C1                       mov cl, al
+  1338 0000114D B002                       mov al, 0x2
+  1339 0000114F E670                       out 0x70, al
+  1340 00001151 E471                       in al, 0x71
+  1341 00001153 88C3                       mov bl, al
+  1342 00001155 B000                       mov al, 0
+  1343 00001157 E670                       out 0x70, al
+  1344 00001159 E471                       in al, 0x71
+  1345 0000115B C3                         ret
+  1346                                  systm:
+  1347 0000115C 48BA-                      mov rdx, syst
+  1347 0000115E [9A2E000000000000] 
+  1348 00001166 B1C6                       mov cl, 0xC6
+  1349 00001168 E8A1F9FFFF                 call cpritn
+  1350 0000116D 48BB-                      mov rbx, clscm
+  1350 0000116F [852E000000000000] 
+  1351 00001177 488B0425[B32E0000]         mov rax, [cmdc]
+  1352 0000117F E818FAFFFF                 call cmper
+  1353 00001184 4883F801                   cmp rax, 1
+  1354 00001188 0F849E0F0000               je clsdo
+  1355 0000118E 48BB-                      mov rbx, hlpcm
+  1355 00001190 [6F2B000000000000] 
+  1356 00001198 488B0425[B32E0000]         mov rax, [cmdc]
+  1357 000011A0 E8F7F9FFFF                 call cmper
+  1358 000011A5 4883F801                   cmp rax, 1
+  1359 000011A9 0F84EA0F0000               je helpdo
+  1360 000011AF 48BB-                      mov rbx, vercm
+  1360 000011B1 [742B000000000000] 
+  1361 000011B9 488B0425[B32E0000]         mov rax, [cmdc]
+  1362 000011C1 E8D6F9FFFF                 call cmper
+  1363 000011C6 4883F801                   cmp rax, 1
+  1364 000011CA 0F84DF0F0000               je verdo
+  1365 000011D0 48BB-                      mov rbx, wht
+  1365 000011D2 [C22D000000000000] 
+  1366 000011DA 488B0425[B32E0000]         mov rax, [cmdc]
+  1367 000011E2 E8B5F9FFFF                 call cmper
+  1368 000011E7 4883F801                   cmp rax, 1
+  1369 000011EB 0F84DE100000               je whtdo
+  1370 000011F1 48BB-                      mov rbx, cred
+  1370 000011F3 [782B000000000000] 
+  1371 000011FB 488B0425[B32E0000]         mov rax, [cmdc]
+  1372 00001203 E894F9FFFF                 call cmper
+  1373 00001208 4883F801                   cmp rax, 1
+  1374 0000120C 0F84B30F0000               je creddo
+  1375 00001212 48BB-                      mov rbx, echcm
+  1375 00001214 [CB2D000000000000] 
+  1376 0000121C 488B0425[B32E0000]         mov rax, [cmdc]
+  1377 00001224 E873F9FFFF                 call cmper
+  1378 00001229 4883F801                   cmp rax, 1
+  1379 0000122D 0F84F20F0000               je echdo
+  1380 00001233 48BB-                      mov rbx, memf
+  1380 00001235 [232E000000000000] 
+  1381 0000123D 488B0425[B32E0000]         mov rax, [cmdc]
+  1382 00001245 E852F9FFFF                 call cmper
+  1383 0000124A 4883F801                   cmp rax, 1
+  1384 0000124E 0F8454120000               je memfdo
+  1385 00001254 48BB-                      mov rbx, tran
+  1385 00001256 [F12E000000000000] 
+  1386 0000125E 488B0425[B32E0000]         mov rax, [cmdc]
+  1387 00001266 E831F9FFFF                 call cmper
+  1388 0000126B 4883F801                   cmp rax, 1
+  1389 0000126F 0F8417100000               je trando
+  1390 00001275 48BB-                      mov rbx, memp
+  1390 00001277 [282E000000000000] 
+  1391 0000127F 488B0425[B32E0000]         mov rax, [cmdc]
+  1392 00001287 E810F9FFFF                 call cmper
+  1393 0000128C 4883F801                   cmp rax, 1
+  1394 00001290 0F84450F0000               je mmpdo
+  1395 00001296 48BB-                      mov rbx, time
+  1395 00001298 [2C2E000000000000] 
+  1396 000012A0 488B0425[B32E0000]         mov rax, [cmdc]
+  1397 000012A8 E8EFF8FFFF                 call cmper
+  1398 000012AD 4883F801                   cmp rax, 1
+  1399 000012B1 0F8480010000               je tmdo
+  1400 000012B7 48BB-                      mov rbx, wdr
+  1400 000012B9 [892E000000000000] 
+  1401 000012C1 488B0425[B32E0000]         mov rax, [cmdc]
+  1402 000012C9 E8CEF8FFFF                 call cmper
+  1403 000012CE 4883F801                   cmp rax, 1
+  1404 000012D2 0F84CF100000               je debdo
+  1405 000012D8 48BB-                      mov rbx, stai
+  1405 000012DA [DC2D000000000000] 
+  1406 000012E2 488B0425[B32E0000]         mov rax, [cmdc]
+  1407 000012EA E8ADF8FFFF                 call cmper
+  1408 000012EF 4883F801                   cmp rax, 1
+  1409 000012F3 0F8408020000               je stdo
+  1410 000012F9 48BB-                      mov rbx, reds
+  1410 000012FB [A62E000000000000] 
+  1411 00001303 488B0425[B32E0000]         mov rax, [cmdc]
+  1412 0000130B E88CF8FFFF                 call cmper
+  1413 00001310 4883F801                   cmp rax, 1
+  1414 00001314 0F841C0E0000               je rdsdo
+  1415 0000131A 48BB-                      mov rbx, inout
+  1415 0000131C [322A000000000000] 
+  1416 00001324 488B0425[B32E0000]         mov rax, [cmdc]
+  1417 0000132C E86BF8FFFF                 call cmper
+  1418 00001331 4883F801                   cmp rax, 1
+  1419 00001335 7478                       je ido
+  1420 00001337 48BB-                      mov rbx, pltai
+  1420 00001339 [2B2A000000000000] 
+  1421 00001341 488B0425[B32E0000]         mov rax, [cmdc]
+  1422 00001349 E84EF8FFFF                 call cmper
+  1423 0000134E 4883F801                   cmp rax, 1
+  1424 00001352 0F846C150000               je pltdo
+  1425 00001358 48BB-                     mov rbx, wakup
+  1425 0000135A [192A000000000000] 
+  1426 00001362 488B0425[B32E0000]        mov rax, [cmdc]
+  1427 0000136A E82DF8FFFF                call cmper
+  1428 0000136F 4883F801                  cmp rax, 1
+  1429 00001373 0F847D110000              je prd
+  1430                                  newliner:
+  1431 00001379 4831C0                     xor rax, rax
+  1432 0000137C 488B0425[232A0000]         mov qword rax, [curzor]
+  1433 00001384 482D00800B00               sub rax, 0xB8000
+  1434 0000138A 4831D2                     xor rdx, rdx
+  1435 0000138D BBA0000000                 mov rbx, 160
+  1436 00001392 48F7F3                     div rbx
+  1437 00001395 4883C001                   add rax, 1
+  1438 00001399 48F7E3                     mul rbx
+  1439 0000139C 480500800B00               add rax, 0xB8000
+  1440 000013A2 48890425[232A0000]         mov qword [curzor], rax
+  1441 000013AA E907F9FFFF                 jmp tets
+  1442                                  ido:
+  1443 000013AF 488B1425[B32E0000]         mov rdx, [cmdc]
+  1444 000013B7 4883C20C                   add rdx, 12
+  1445 000013BB E81EFCFFFF                 call gatherer
+  1446 000013C0 4989C7                     mov r15, rax
+  1447 000013C3 4157                       push r15
+  1448 000013C5 4983F901                   cmp r9, 1
+  1449 000013C9 0F846DFCFFFF               je sike
+  1450 000013CF 4883C202                   add rdx, 2
+  1451 000013D3 E806FCFFFF                 call gatherer
+  1452 000013D8 4983F901                   cmp r9, 1
+  1453 000013DC 0F845AFCFFFF               je sike
+  1454 000013E2 4989C7                     mov r15, rax
+  1455 000013E5 4157                       push r15
+  1456 000013E7 4983F901                   cmp r9, 1
+  1457 000013EB 0F844BFCFFFF               je sike
+  1458 000013F1 4883C202                   add rdx, 2
+  1459 000013F5 E8E4FBFFFF                 call gatherer
+  1460 000013FA 4983F901                   cmp r9, 1
+  1461 000013FE 0F8438FCFFFF               je sike
+  1462 00001404 4989C6                     mov r14, rax
+  1463 00001407 415F                       pop r15
+  1464 00001409 4D89FD                     mov r13, r15
+  1465 0000140C 415F                       pop r15
+  1466 0000140E 4C89F8                     mov rax, r15
+  1467 00001411 4831D2                     xor rdx, rdx
+  1468 00001414 4C89EA                     mov rdx, r13
+  1469 00001417 EE                         out dx, al
+  1470 00001418 4C89F2                     mov rdx, r14
+  1471 0000141B EC                         in al, dx
+  1472 0000141C E8E6F1FFFF                 call bintrn
+  1473 00001421 48BA-                      mov rdx, netanyahu
+  1473 00001423 [4D06000000000000] 
+  1474 0000142B B107                       mov cl, 0x7
+  1475 0000142D E8DCF6FFFF                 call cpritn
+  1476 00001432 E942FFFFFF                 jmp newliner
+  1477                                  tmdo:
+  1478 00001437 E8D8FCFFFF                 call tim
+  1479 0000143C 4983F900                   cmp r9, 0
+  1480 00001440 0F844C0C0000               je bint
+  1481 00001446 4D31ED                     xor r13, r13
+  1482 00001449 4D31E4                     xor r12, r12
+  1483 0000144C 4D31DB                     xor r11, r11
+  1484 0000144F 4989DB                     mov r11, rbx
+  1485 00001452 4989CC                     mov r12, rcx
+  1486 00001455 4989D5                     mov r13, rdx
+  1487 00001458 E820F1FFFF                 call hexbintrn
+  1488 0000145D 48BA-                      mov rdx, netanyahu
+  1488 0000145F [4D06000000000000] 
+  1489 00001467 4883C210                   add rdx, 16
+  1490 0000146B B107                       mov cl, 0x7
+  1491 0000146D E89CF6FFFF                 call cpritn
+  1492 00001472 48BA-                      mov rdx, crk
+  1492 00001474 [462E000000000000] 
+  1493 0000147C B107                       mov cl, 0x7
+  1494 0000147E E88BF6FFFF                 call cpritn
+  1495 00001483 4C89D8                     mov rax, r11
+  1496 00001486 E8F2F0FFFF                 call hexbintrn
+  1497 0000148B 48BA-                      mov rdx, netanyahu
+  1497 0000148D [4D06000000000000] 
+  1498 00001495 4883C210                   add rdx, 16
+  1499 00001499 B107                       mov cl, 0x7
+  1500 0000149B E86EF6FFFF                 call cpritn
+  1501 000014A0 48BA-                      mov rdx, crk
+  1501 000014A2 [462E000000000000] 
+  1502 000014AA B107                       mov cl, 0x7
+  1503 000014AC E85DF6FFFF                 call cpritn
+  1504 000014B1 4C89E0                     mov rax, r12
+  1505 000014B4 E8C4F0FFFF                 call hexbintrn
+  1506 000014B9 48BA-                      mov rdx, netanyahu
+  1506 000014BB [4D06000000000000] 
+  1507 000014C3 4883C210                   add rdx, 16
+  1508 000014C7 B107                       mov cl, 0x7
+  1509 000014C9 E840F6FFFF                 call cpritn
+  1510 000014CE 48BA-                      mov rdx, crk
+  1510 000014D0 [462E000000000000] 
+  1511 000014D8 B107                       mov cl, 0x7
+  1512 000014DA E82FF6FFFF                 call cpritn
+  1513 000014DF 4C89E8                     mov rax, r13
+  1514 000014E2 E896F0FFFF                 call hexbintrn
+  1515 000014E7 48BA-                      mov rdx, netanyahu
+  1515 000014E9 [4D06000000000000] 
+  1516 000014F1 4883C210                   add rdx, 16
+  1517 000014F5 B107                       mov cl, 0x7
+  1518 000014F7 E812F6FFFF                 call cpritn
+  1519 000014FC E978FEFFFF                 jmp newliner
+  1520                                  stdo:
+  1521 00001501 BE00001000                 mov rsi, 0x100000
+  1522 00001506 813E47475546               cmp dword [rsi], 'GGUF'
+  1523 0000150C 0F85A1090000               jne rrr
+  1524 00001512 4883C604                   add rsi, 4
+  1525 00001516 4831C0                     xor rax, rax
+  1526 00001519 8B06                       mov eax, dword [rsi]
+  1527 0000151B 890425[911B0000]           mov dword [verison], eax
+  1528 00001522 4883C604                   add rsi, 4
+  1529 00001526 488B06                     mov rax, qword [rsi]
+  1530 00001529 48890425[9F1B0000]         mov qword [tentry], rax
+  1531 00001531 4883C608                   add rsi, 8
+  1532 00001535 488B06                     mov rax, qword [rsi]
+  1533 00001538 48890425[971B0000]         mov qword [mentry], rax
+  1534 00001540 4883C608                   add rsi, 8
+  1535 00001544 56                         push rsi
+  1536 00001545 48BA-                      mov rdx, vtxt
+  1536 00001547 [1C1B000000000000] 
+  1537 0000154F B107                       mov cl, 0x7
+  1538 00001551 E8B8F5FFFF                 call cpritn
+  1539 00001556 8B0425[911B0000]           mov eax, dword [verison]
+  1540 0000155D E8A5F0FFFF                 call bintrn
+  1541 00001562 48BA-                      mov rdx, netanyahu
+  1541 00001564 [4D06000000000000] 
+  1542 0000156C B107                       mov cl, 0x7
+  1543 0000156E E89BF5FFFF                 call cpritn
+  1544 00001573 48BA-                      mov rdx, mtxt
+  1544 00001575 [4B1B000000000000] 
+  1545 0000157D B107                       mov cl, 0x7
+  1546 0000157F E88AF5FFFF                 call cpritn
+  1547 00001584 488B0425[971B0000]         mov rax, qword [mentry]
+  1548 0000158C E876F0FFFF                 call bintrn
+  1549 00001591 48BA-                      mov rdx, netanyahu
+  1549 00001593 [4D06000000000000] 
+  1550 0000159B B107                       mov cl, 0x7
+  1551 0000159D E86CF5FFFF                 call cpritn
+  1552 000015A2 48BA-                      mov rdx, ttet
+  1552 000015A4 [6F1B000000000000] 
+  1553 000015AC B107                       mov cl, 0x7
+  1554 000015AE E85BF5FFFF                 call cpritn
+  1555 000015B3 488B0425[9F1B0000]         mov rax, qword [tentry]
+  1556 000015BB E847F0FFFF                 call bintrn
+  1557 000015C0 48BA-                      mov rdx, netanyahu
+  1557 000015C2 [4D06000000000000] 
+  1558 000015CA B107                       mov cl, 0x7
+  1559 000015CC E83DF5FFFF                 call cpritn
+  1560 000015D1 BB18001000                 mov rbx, (0x100000 + 24)
+  1561                                  genlp:
+  1562 000015D6 488B03                     mov rax, qword [rbx]
+  1563 000015D9 4883C308                   add rbx, 8
+  1564 000015DD 83F814                     cmp eax, 20
+  1565 000015E0 741D                       je findmtdt
+  1566                                  tie:
+  1567 000015E2 4801C3                     add rbx, rax
+  1568 000015E5 8B03                       mov eax, dword [rbx]
+  1569 000015E7 E8D8090000                 call tagid
+  1570 000015EC 4983F901                   cmp r9, 1
+  1571 000015F0 0F84B0090000               je parse_err
+  1572 000015F6 4883C304                   add rbx, 4
+  1573 000015FA 4801D3                     add rbx, rdx
+  1574 000015FD EBD7                       jmp genlp
+  1575                                  findmtdt:
+  1576 000015FF 50                         push rax
+  1577 00001600 53                         push rbx
+  1578 00001601 51                         push rcx
+  1579 00001602 52                         push rdx
+  1580 00001603 4889D8                     mov rax, rbx
+  1581 00001606 48BB-                      mov rbx, gnar
+  1581 00001608 [312E000000000000] 
+  1582 00001610 E8B0F5FFFF                 call cmp
+  1583 00001615 4883F801                   cmp rax, 1
+  1584 00001619 7406                       je ganok
+  1585 0000161B 5A                         pop rdx
+  1586 0000161C 59                         pop rcx
+  1587 0000161D 5B                         pop rbx
+  1588 0000161E 58                         pop rax
+  1589 0000161F EBC1                       jmp tie
+  1590                                  ganok:
+  1591 00001621 5A                         pop rdx
+  1592 00001622 59                         pop rcx
+  1593 00001623 5B                         pop rbx
+  1594 00001624 58                         pop rax
+  1595 00001625 4883C314                   add rbx, 20
+  1596 00001629 8B03                       mov eax, dword [rbx]
+  1597 0000162B E894090000                 call tagid
+  1598 00001630 4883EA08                   sub rdx, 8
+  1599 00001634 4883C30C                   add rbx, 12
+  1600 00001638 48BF-                      mov rdi, prbf
+  1600 0000163A [DC1B000000000000] 
+  1601 00001642 48891425[D41B0000]         mov qword [bflen], rdx
+  1602                                  cper:
+  1603 0000164A 4883FA40                   cmp rdx, 64
+  1604 0000164E 0F8352090000               jae parse_err
+  1605 00001654 8A03                       mov al, byte [rbx]
+  1606 00001656 8807                       mov byte [rdi], al
+  1607 00001658 4883C301                   add rbx, 1
+  1608 0000165C 4883C701                   add rdi, 1
+  1609 00001660 4883EA01                   sub rdx, 1
+  1610 00001664 4883FA00                   cmp rdx, 0
+  1611 00001668 75E0                       jne cper
+  1612 0000166A 48BA-                      mov rdx, gentxt
+  1612 0000166C [A71B000000000000] 
+  1613 00001674 B107                       mov cl, 0x7
+  1614 00001676 E893F4FFFF                 call cpritn
+  1615 0000167B 48BA-                      mov rdx, prbf
+  1615 0000167D [DC1B000000000000] 
+  1616 00001685 B107                       mov cl, 0x7
+  1617 00001687 E882F4FFFF                 call cpritn
+  1618 0000168C 48BA-                      mov rdx, mtext
+  1618 0000168E [261B000000000000] 
+  1619 00001696 B107                       mov cl, 0x7
+  1620 00001698 E871F4FFFF                 call cpritn
+  1621 0000169D 48BF-                      mov rdi, bos
+  1621 0000169F [F11C000000000000] 
+  1622 000016A7 48BE-                      mov rsi, bosb
+  1622 000016A9 [0D1D000000000000] 
+  1623 000016B1 E813080000                 call etfun
+  1624 000016B6 48BF-                      mov rdi, eos
+  1624 000016B8 [111D000000000000] 
+  1625 000016C0 48BE-                      mov rsi, eosb
+  1625 000016C2 [2D1D000000000000] 
+  1626 000016CA E8FA070000                 call etfun
+  1627 000016CF 48BF-                      mov rdi, tok
+  1627 000016D1 [311D000000000000] 
+  1628 000016D9 E8EB070000                 call etfun
+  1629 000016DE 4C890425[471D0000]         mov qword [toks], r8
+  1630 000016E6 4C890C25[4F1D0000]         mov qword [toke], r9
+  1631 000016EE 48BF-                      mov rdi, scr
+  1631 000016F0 [571D000000000000] 
+  1632 000016F8 E8CC070000                 call etfun
+  1633 000016FD 4C890425[6D1D0000]         mov qword [scrs], r8
+  1634 00001705 4C890C25[751D0000]         mov qword [scre], r9
+  1635 0000170D 48BF-                      mov rdi, tty
+  1635 0000170F [7D1D000000000000] 
+  1636 00001717 E8AD070000                 call etfun
+  1637 0000171C 4C890425[971D0000]         mov qword [ttys], r8
+  1638 00001724 4C890C25[9F1D0000]         mov qword [ttye], r9
+  1639 0000172C 48BE-                      mov rsi, vsz
+  1639 0000172E [A71C000000000000] 
+  1640 00001736 E852070000                 call spcp
+  1641 0000173B 48BF-                      mov rdi, prbf
+  1641 0000173D [DC1B000000000000] 
+  1642 00001745 48BE-                      mov rsi, vszb
+  1642 00001747 [B31C000000000000] 
+  1643 0000174F E875070000                 call etfun
+  1644 00001754 48BE-                      mov rsi, blc
+  1644 00001756 [1C1C000000000000] 
+  1645 0000175E E82A070000                 call spcp
+  1646 00001763 48BF-                      mov rdi, prbf
+  1646 00001765 [DC1B000000000000] 
+  1647 0000176D 48BE-                      mov rsi, blcb
+  1647 0000176F [291C000000000000] 
+  1648 00001777 E84D070000                 call etfun
+  1649 0000177C 48BE-                      mov rsi, ctl
+  1649 0000177E [7A1C000000000000] 
+  1650 00001786 E802070000                 call spcp
+  1651 0000178B 48BF-                      mov rdi, prbf
+  1651 0000178D [DC1B000000000000] 
+  1652 00001795 48BE-                      mov rsi, ctlb
+  1652 00001797 [8A1C000000000000] 
+  1653 0000179F E825070000                 call etfun
+  1654 000017A4 48BE-                      mov rsi, rpf
+  1654 000017A6 [B71C000000000000] 
+  1655 000017AE E8DA060000                 call spcp
+  1656 000017B3 48BF-                      mov rdi, prbf
+  1656 000017B5 [DC1B000000000000] 
+  1657 000017BD 48BE-                      mov rsi, rpfb
+  1657 000017BF [C71C000000000000] 
+  1658 000017C7 E8FD060000                 call etfun
+  1659 000017CC 48BE-                      mov rsi, embl
+  1659 000017CE [2D1C000000000000] 
+  1660 000017D6 E8B2060000                 call spcp
+  1661 000017DB 48BF-                      mov rdi, prbf
+  1661 000017DD [DC1B000000000000] 
+  1662 000017E5 48BE-                      mov rsi, emblb
+  1662 000017E7 [3F1C000000000000] 
+  1663 000017EF E8D5060000                 call etfun
+  1664 000017F4 48BE-                      mov rsi, ffl
+  1664 000017F6 [8E1C000000000000] 
+  1665 000017FE E88A060000                 call spcp
+  1666 00001803 48BF-                      mov rdi, prbf
+  1666 00001805 [DC1B000000000000] 
+  1667 0000180D 48BE-                      mov rsi, fflb
+  1667 0000180F [A31C000000000000] 
+  1668 00001817 E8AD060000                 call etfun
+  1669 0000181C 48BE-                      mov rsi, ath
+  1669 0000181E [431C000000000000] 
+  1670 00001826 E862060000                 call spcp
+  1671 0000182B 48BF-                      mov rdi, prbf
+  1671 0000182D [DC1B000000000000] 
+  1672 00001835 48BE-                      mov rsi, athb
+  1672 00001837 [591C000000000000] 
+  1673 0000183F E885060000                 call etfun
+  1674 00001844 48BE-                      mov rsi, atv
+  1674 00001846 [5D1C000000000000] 
+  1675 0000184E E83A060000                 call spcp
+  1676 00001853 48BF-                      mov rdi, prbf
+  1676 00001855 [DC1B000000000000] 
+  1677 0000185D 48BE-                      mov rsi, atvb
+  1677 0000185F [761C000000000000] 
+  1678 00001867 E85D060000                 call etfun
+  1679 0000186C 48BE-                      mov rsi, lne
+  1679 0000186E [CB1C000000000000] 
+  1680 00001876 E812060000                 call spcp
+  1681 0000187B 48BF-                      mov rdi, prbf
+  1681 0000187D [DC1B000000000000] 
+  1682 00001885 48BE-                      mov rsi, lneb
+  1682 00001887 [ED1C000000000000] 
+  1683 0000188F E835060000                 call etfun
+  1684 00001894 B8[291C0000]               mov eax, blcb
+  1685 00001899 E869EDFFFF                 call bintrn
+  1686 0000189E 48BA-                      mov rdx, netanyahu
+  1686 000018A0 [4D06000000000000] 
+  1687 000018A8 B107                       mov cl, 0x7
+  1688 000018AA E85FF2FFFF                 call cpritn
+  1689 000018AF 48BA-                      mov rdx, pipe
+  1689 000018B1 [951B000000000000] 
+  1690 000018B9 B107                       mov cl, 0x7
+  1691 000018BB E84EF2FFFF                 call cpritn
+  1692 000018C0 B8[3F1C0000]               mov eax, emblb
+  1693 000018C5 E83DEDFFFF                 call bintrn
+  1694 000018CA 48BA-                      mov rdx, netanyahu
+  1694 000018CC [4D06000000000000] 
+  1695 000018D4 B107                       mov cl, 0x7
+  1696 000018D6 E833F2FFFF                 call cpritn
+  1697 000018DB 48BA-                      mov rdx, pipe
+  1697 000018DD [951B000000000000] 
+  1698 000018E5 B107                       mov cl, 0x7
+  1699 000018E7 E822F2FFFF                 call cpritn
+  1700 000018EC B8[591C0000]               mov eax, athb
+  1701 000018F1 E811EDFFFF                 call bintrn
+  1702 000018F6 48BA-                      mov rdx, netanyahu
+  1702 000018F8 [4D06000000000000] 
+  1703 00001900 B107                       mov cl, 0x7
+  1704 00001902 E807F2FFFF                 call cpritn
+  1705 00001907 48BA-                      mov rdx, pipe
+  1705 00001909 [951B000000000000] 
+  1706 00001911 B107                       mov cl, 0x7
+  1707 00001913 E8F6F1FFFF                 call cpritn
+  1708 00001918 B8[761C0000]               mov eax, atvb
+  1709 0000191D E8E5ECFFFF                 call bintrn
+  1710 00001922 48BA-                      mov rdx, netanyahu
+  1710 00001924 [4D06000000000000] 
+  1711 0000192C B107                       mov cl, 0x7
+  1712 0000192E E8DBF1FFFF                 call cpritn
+  1713 00001933 48BA-                      mov rdx, pipe
+  1713 00001935 [951B000000000000] 
+  1714 0000193D B107                       mov cl, 0x7
+  1715 0000193F E8CAF1FFFF                 call cpritn
+  1716 00001944 B8[A31C0000]               mov eax, fflb
+  1717 00001949 E8B9ECFFFF                 call bintrn
+  1718 0000194E 48BA-                      mov rdx, netanyahu
+  1718 00001950 [4D06000000000000] 
+  1719 00001958 B107                       mov cl, 0x7
+  1720 0000195A E8AFF1FFFF                 call cpritn
+  1721 0000195F 48BA-                      mov rdx, pipe
+  1721 00001961 [951B000000000000] 
+  1722 00001969 B107                       mov cl, 0x7
+  1723 0000196B E89EF1FFFF                 call cpritn
+  1724 00001970 B8[B31C0000]               mov eax, vszb
+  1725 00001975 E88DECFFFF                 call bintrn
+  1726 0000197A 48BA-                      mov rdx, netanyahu
+  1726 0000197C [4D06000000000000] 
+  1727 00001984 B107                       mov cl, 0x7
+  1728 00001986 E883F1FFFF                 call cpritn
+  1729 0000198B 48BA-                      mov rdx, pipe
+  1729 0000198D [951B000000000000] 
+  1730 00001995 B107                       mov cl, 0x7
+  1731 00001997 E872F1FFFF                 call cpritn
+  1732 0000199C B8[ED1C0000]               mov eax, lneb
+  1733 000019A1 E861ECFFFF                 call bintrn
+  1734 000019A6 48BA-                      mov rdx, netanyahu
+  1734 000019A8 [4D06000000000000] 
+  1735 000019B0 B107                       mov cl, 0x7
+  1736 000019B2 E857F1FFFF                 call cpritn
+  1737 000019B7 48BA-                      mov rdx, pipe
+  1737 000019B9 [951B000000000000] 
+  1738 000019C1 B107                       mov cl, 0x7
+  1739 000019C3 E846F1FFFF                 call cpritn
+  1740 000019C8 B8[0D1D0000]               mov eax, bosb
+  1741 000019CD E835ECFFFF                 call bintrn
+  1742 000019D2 48BA-                      mov rdx, netanyahu
+  1742 000019D4 [4D06000000000000] 
+  1743 000019DC B107                       mov cl, 0x7
+  1744 000019DE E82BF1FFFF                 call cpritn
+  1745 000019E3 48BA-                      mov rdx, pipe
+  1745 000019E5 [951B000000000000] 
+  1746 000019ED B107                       mov cl, 0x7
+  1747 000019EF E81AF1FFFF                 call cpritn
+  1748 000019F4 B8[2D1D0000]               mov eax, eosb
+  1749 000019F9 E809ECFFFF                 call bintrn
+  1750 000019FE 48BA-                      mov rdx, netanyahu
+  1750 00001A00 [4D06000000000000] 
+  1751 00001A08 B107                       mov cl, 0x7
+  1752 00001A0A E8FFF0FFFF                 call cpritn
+  1753 00001A0F 48BA-                      mov rdx, pipe
+  1753 00001A11 [951B000000000000] 
+  1754 00001A19 B107                       mov cl, 0x7
+  1755 00001A1B E8EEF0FFFF                 call cpritn
+  1756 00001A20 B8[471D0000]               mov eax, toks
+  1757 00001A25 E8DDEBFFFF                 call bintrn
+  1758 00001A2A 48BA-                      mov rdx, netanyahu
+  1758 00001A2C [4D06000000000000] 
+  1759 00001A34 B107                       mov cl, 0x7
+  1760 00001A36 E8D3F0FFFF                 call cpritn
+  1761 00001A3B 48BA-                      mov rdx, pipe
+  1761 00001A3D [951B000000000000] 
+  1762 00001A45 B107                       mov cl, 0x7
+  1763 00001A47 E8C2F0FFFF                 call cpritn
+  1764 00001A4C B8[4F1D0000]               mov eax, toke
+  1765 00001A51 E8B1EBFFFF                 call bintrn
+  1766 00001A56 48BA-                      mov rdx, netanyahu
+  1766 00001A58 [4D06000000000000] 
+  1767 00001A60 B107                       mov cl, 0x7
+  1768 00001A62 E8A7F0FFFF                 call cpritn
+  1769 00001A67 48BA-                      mov rdx, pipe
+  1769 00001A69 [951B000000000000] 
+  1770 00001A71 B107                       mov cl, 0x7
+  1771 00001A73 E896F0FFFF                 call cpritn
+  1772 00001A78 B8[6D1D0000]               mov eax, scrs
+  1773 00001A7D E885EBFFFF                 call bintrn
+  1774 00001A82 48BA-                      mov rdx, netanyahu
+  1774 00001A84 [4D06000000000000] 
+  1775 00001A8C B107                       mov cl, 0x7
+  1776 00001A8E E87BF0FFFF                 call cpritn
+  1777 00001A93 48BA-                      mov rdx, pipe
+  1777 00001A95 [951B000000000000] 
+  1778 00001A9D B107                       mov cl, 0x7
+  1779 00001A9F E86AF0FFFF                 call cpritn
+  1780 00001AA4 B8[751D0000]               mov eax, scre
+  1781 00001AA9 E859EBFFFF                 call bintrn
+  1782 00001AAE 48BA-                      mov rdx, netanyahu
+  1782 00001AB0 [4D06000000000000] 
+  1783 00001AB8 B107                       mov cl, 0x7
+  1784 00001ABA E84FF0FFFF                 call cpritn
+  1785 00001ABF 48BA-                      mov rdx, pipe
+  1785 00001AC1 [951B000000000000] 
+  1786 00001AC9 B107                       mov cl, 0x7
+  1787 00001ACB E83EF0FFFF                 call cpritn
+  1788 00001AD0 B8[971D0000]               mov eax, ttys
+  1789 00001AD5 E82DEBFFFF                 call bintrn
+  1790 00001ADA 48BA-                      mov rdx, netanyahu
+  1790 00001ADC [4D06000000000000] 
+  1791 00001AE4 B107                       mov cl, 0x7
+  1792 00001AE6 E823F0FFFF                 call cpritn
+  1793 00001AEB 48BA-                      mov rdx, pipe
+  1793 00001AED [951B000000000000] 
+  1794 00001AF5 B107                       mov cl, 0x7
+  1795 00001AF7 E812F0FFFF                 call cpritn
+  1796 00001AFC B8[9F1D0000]               mov eax, ttye
+  1797 00001B01 E801EBFFFF                 call bintrn
+  1798 00001B06 48BA-                      mov rdx, netanyahu
+  1798 00001B08 [4D06000000000000] 
+  1799 00001B10 B107                       mov cl, 0x7
+  1800 00001B12 E8F7EFFFFF                 call cpritn
+  1801 00001B17 E95DF8FFFF                 jmp newliner
+  1802 00001B1C 76657273696F6E3A20-     vtxt: db 'version: ', 0
+  1802 00001B25 00                 
+  1803 00001B26 20676F696E67207472-     mtext: db ' going trough metadata entryes..... ', 0
+  1803 00001B2F 6F756768206D657461-
+  1803 00001B38 6461746120656E7472-
+  1803 00001B41 7965732E2E2E2E2E20-
+  1803 00001B4A 00                 
+  1804 00001B4B 206E756D626572206F-     mtxt: db ' number of metadata entryes found: ', 0
+  1804 00001B54 66206D657461646174-
+  1804 00001B5D 6120656E7472796573-
+  1804 00001B66 20666F756E643A2000 
+  1805 00001B6F 206E756D626572206F-     ttet: db ' number of tensor entryes found: ', 0
+  1805 00001B78 662074656E736F7220-
+  1805 00001B81 656E74727965732066-
+  1805 00001B8A 6F756E643A2000     
+  1806 00001B91 00000000                verison: dd 0
+  1807 00001B95 7C00                    pipe: db '|', 0
+  1808 00001B97 0000000000000000        mentry: dq 0
+  1809 00001B9F 0000000000000000        tentry: dq 0
+  1810 00001BA7 2067656E6E6572616C-     gentxt: db ' genneral architecture: ', 0
+  1810 00001BB0 206172636869746563-
+  1810 00001BB9 747572653A2000     
+  1811 00001BC0 6D6F64656C20776173-     mdnf: db 'model was mot found', 0
+  1811 00001BC9 206D6F7420666F756E-
+  1811 00001BD2 6400               
+  1812 00001BD4 0000000000000000        bflen: dq 0
+  1813 00001BDC 00<rep 40h>             prbf: times 64 db 0
+  1814 00001C1C 2E626C6F636B5F636F-     blc:  db '.block_count', 0
+  1814 00001C25 756E7400           
+  1815 00001C29 1E000000                blcb: dd 30
+  1816 00001C2D 2E656D62656464696E-     embl: db '.embedding_length', 0
+  1816 00001C36 675F6C656E67746800 
+  1817 00001C3F 40020000                emblb: dd 576
+  1818 00001C43 2E617474656E74696F-     ath:  db '.attention.head_count', 0
+  1818 00001C4C 6E2E686561645F636F-
+  1818 00001C55 756E7400           
+  1819 00001C59 09000000                athb: dd 9
+  1820 00001C5D 2E617474656E74696F-     atv:  db '.attention.head_count_kv', 0
+  1820 00001C66 6E2E686561645F636F-
+  1820 00001C6F 756E745F6B7600     
+  1821 00001C76 03000000                atvb: dd 3
+  1822 00001C7A 2E636F6E746578745F-     ctl:  db '.context_length', 0
+  1822 00001C83 6C656E67746800     
+  1823 00001C8A 00200000                ctlb: dd 8192
+  1824 00001C8E 2E666565645F666F72-     ffl:  db '.feed_forward_length', 0
+  1824 00001C97 776172645F6C656E67-
+  1824 00001CA0 746800             
+  1825 00001CA3 00060000                fflb: dd 1536
+  1826 00001CA7 2E766F6361625F7369-     vsz:  db '.vocab_size', 0
+  1826 00001CB0 7A6500             
+  1827 00001CB3 00C00000                vszb: dd 49152
+  1828 00001CB7 2E726F70652E667265-     rpf:  db '.rope.freq_base', 0
+  1828 00001CC0 715F6261736500     
+  1829 00001CC7 A0860100                rpfb: dd 100000
+  1830 00001CCB 2E617474656E74696F-     lne:  db '.attention.layer_norm_rms_epsilon', 0
+  1830 00001CD4 6E2E6C617965725F6E-
+  1830 00001CDD 6F726D5F726D735F65-
+  1830 00001CE6 7073696C6F6E00     
+  1831 00001CED 17B7D138                lneb: dd 0x38d1b717
+  1832 00001CF1 746F6B656E697A6572-     bos:  db 'tokenizer.ggml.bos_token_id', 0
+  1832 00001CFA 2E67676D6C2E626F73-
+  1832 00001D03 5F746F6B656E5F6964-
+  1832 00001D0C 00                 
+  1833 00001D0D 01000000                bosb: dd 1
+  1834 00001D11 746F6B656E697A6572-     eos:  db 'tokenizer.ggml.eos_token_id', 0
+  1834 00001D1A 2E67676D6C2E656F73-
+  1834 00001D23 5F746F6B656E5F6964-
+  1834 00001D2C 00                 
+  1835 00001D2D 02000000                eosb: dd 2
+  1836 00001D31 746F6B656E697A6572-     tok:  db 'tokenizer.ggml.tokens', 0
+  1836 00001D3A 2E67676D6C2E746F6B-
+  1836 00001D43 656E7300           
+  1837 00001D47 4704000000000000        toks: dq 0x00000447      ; Start offset of token strings (49152 tokens)
+  1838 00001D4F 65A60B0000000000        toke: dq 0x000BA665      ; End offset of token strings
+  1839 00001D57 746F6B656E697A6572-     scr:  db 'tokenizer.ggml.scores', 0
+  1839 00001D60 2E67676D6C2E73636F-
+  1839 00001D69 72657300           
+  1840 00001D6D 0000000000000000        scrs: dq 0
+  1841 00001D75 0000000000000000        scre: dq 0
+  1842 00001D7D 746F6B656E697A6572-     tty:  db 'tokenizer.ggml.token_type', 0
+  1842 00001D86 2E67676D6C2E746F6B-
+  1842 00001D8F 656E5F7479706500   
+  1843 00001D97 8AA60B0000000000        ttys: dq 0x000BA68A      ; Start offset of token types array
+  1844 00001D9F 96A60E0000000000        ttye: dq 0x000EA696      ; End offset of token types array
+  1845 00001DA7 746F6B656E697A6572-     mrg:  db 'tokenizer.ggml.merges', 0
+  1845 00001DB0 2E67676D6C2E6D6572-
+  1845 00001DB9 67657300           
+  1846 00001DBD B7A60E0000000000        mrgs: dq 0x000EA6B7      ; Start offset of BPE merges list
+  1847 00001DC5 A8FD1A0000000000        mrge: dq 0x001AFDA8      ; End offset of BPE merges list
+  1848                                  
+  1849                                  ; =====================================================================
+  1850                                  ; SmolLM2-135M-Instruct-f16 HARDCODED MODEL & TENSOR DATA
+  1851                                  ; =====================================================================
+  1852 00001DCD 6C6C616D6100            smollm2_arch:            db 'llama', 0
+  1853 00001DD3 536D6F6C4C4D322D31-     smollm2_name:            db 'SmolLM2-135M-Instruct-f16', 0
+  1853 00001DDC 33354D2D496E737472-
+  1853 00001DE5 7563742D66313600   
+  1854 00001DED 403F1B0000000000        smollm2_gguf_hdr_len:    dq 0x1B3F40        ; GGUF Data Section Start Offset (1,785,664 bytes)
+  1855 00001DF5 0000000000000000        smollm2_token_embd_off:  dq 0x00000000      ; token_embd.weight relative offset (dims=[576, 49152], F16)
+  1856 00001DFD 001C0A1000000000        smollm2_output_norm_off: dq 0x100A1C00      ; output_norm.weight relative offset (dims=[576], F32)
+  1857 00001E05 0000600300000000        smollm2_blk_base_off:    dq 0x03600000      ; Block 0 base relative offset
+  1858 00001E0D 00126C0000000000        smollm2_blk_stride:      dq 0x006C1200      ; Per-block offset stride (7,082,496 bytes)
+  1859                                  
+  1860                                  ; Hardcoded Tokenizer Offsets (SmolLM2 Token ID Book)
+  1861 00001E15 4704000000000000        smollm2_tok_start_off:   dq 0x00000447      ; Token strings dictionary start
+  1862 00001E1D 65A60B0000000000        smollm2_tok_end_off:     dq 0x000BA665      ; Token strings dictionary end
+  1863 00001E25 8AA60B0000000000        smollm2_tty_start_off:   dq 0x000BA68A      ; Token types start
+  1864 00001E2D 96A60E0000000000        smollm2_tty_end_off:     dq 0x000EA696      ; Token types end
+  1865 00001E35 B7A60E0000000000        smollm2_mrg_start_off:   dq 0x000EA6B7      ; BPE merges start
+  1866 00001E3D A8FD1A0000000000        smollm2_mrg_end_off:     dq 0x001AFDA8      ; BPE merges end
+  1867                                  
+  1868                                  ; Relative tensor offsets within each transformer block k (0 <= k < 30):
+  1869 00001E45 0000000000000000        smollm2_attn_norm_rel:   dq 0x00000000      ; blk.k.attn_norm.weight (dims=[576], F32)
+  1870 00001E4D 0009000000000000        smollm2_ffn_down_rel:    dq 0x00000900      ; blk.k.ffn_down.weight (dims=[1536, 576], F16)
+  1871 00001E55 00091B0000000000        smollm2_ffn_gate_rel:    dq 0x001B0900      ; blk.k.ffn_gate.weight (dims=[576, 1536], F16)
+  1872 00001E5D 0009360000000000        smollm2_ffn_up_rel:      dq 0x00360900      ; blk.k.ffn_up.weight (dims=[576, 1536], F16)
+  1873 00001E65 0009510000000000        smollm2_ffn_norm_rel:    dq 0x00510900      ; blk.k.ffn_norm.weight (dims=[576], F32)
+  1874 00001E6D 0012510000000000        smollm2_attn_k_rel:      dq 0x00511200      ; blk.k.attn_k.weight (dims=[576, 192], F16)
+  1875 00001E75 0072540000000000        smollm2_attn_output_rel: dq 0x00547200      ; blk.k.attn_output.weight (dims=[576, 576], F16)
+  1876 00001E7D 00925E0000000000        smollm2_attn_q_rel:      dq 0x005E9200      ; blk.k.attn_q.weight (dims=[576, 576], F16)
+  1877 00001E85 00B2680000000000        smollm2_attn_v_rel:      dq 0x0068B200      ; blk.k.attn_v.weight (dims=[576, 192], F16)
+  1878                                  spcp:
+  1879 00001E8D 488B0425[D41B0000]         mov rax, qword [bflen]
+  1880 00001E95 48BB-                      mov rbx, prbf
+  1880 00001E97 [DC1B000000000000] 
+  1881 00001E9F 4801C3                     add rbx, rax
+  1882                                  splp:
+  1883 00001EA2 8A06                       mov al, byte [rsi]
+  1884 00001EA4 8803                       mov byte [rbx], al
+  1885 00001EA6 3C00                       cmp al, 0
+  1886 00001EA8 7408                       je spend
+  1887 00001EAA 48FFC3                     inc rbx
+  1888 00001EAD 48FFC6                     inc rsi
+  1889 00001EB0 EBF0                       jmp splp
+  1890                                  spend:
+  1891 00001EB2 C3                         ret
+  1892                                  rrr:
+  1893 00001EB3 48BA-                      mov rdx, mdnf
+  1893 00001EB5 [C01B000000000000] 
+  1894 00001EBD B107                       mov cl, 0x7
+  1895 00001EBF E84AECFFFF                 call cpritn
+  1896 00001EC4 E9B0F4FFFF                 jmp newliner
+  1897                                  etfun:
+  1898 00001EC9 BB00001000                 mov rbx, 0x100000
+  1899 00001ECE 4883C318                   add rbx, 24
+  1900 00001ED2 4C8B1425[971B0000]         mov r10, qword [mentry]
+  1901                                  etflp:
+  1902 00001EDA 4983FA00                   cmp r10,0
+  1903 00001EDE 0F8497000000               je etfl
+  1904 00001EE4 50                         push rax
+  1905 00001EE5 53                         push rbx
+  1906 00001EE6 51                         push rcx
+  1907 00001EE7 52                         push rdx
+  1908 00001EE8 56                         push rsi
+  1909 00001EE9 57                         push rdi
+  1910 00001EEA 4C89D0                     mov rax, r10
+  1911 00001EED E88BE6FFFF                 call hexbintrn
+  1912 00001EF2 48BA-                      mov rdx, netanyahu
+  1912 00001EF4 [4D06000000000000] 
+  1913 00001EFC B107                       mov cl, 0x7
+  1914 00001EFE E80BECFFFF                 call cpritn
+  1915 00001F03 5F                         pop rdi
+  1916 00001F04 5E                         pop rsi
+  1917 00001F05 5A                         pop rdx
+  1918 00001F06 59                         pop rcx
+  1919 00001F07 5B                         pop rbx
+  1920 00001F08 58                         pop rax
+  1921 00001F09 4983EA01                   sub r10,1
+  1922 00001F0D 488B03                     mov rax, qword [rbx]
+  1923 00001F10 4883C308                   add rbx, 8
+  1924 00001F14 57                         push rdi
+  1925 00001F15 56                         push rsi
+  1926 00001F16 50                         push rax
+  1927 00001F17 53                         push rbx
+  1928 00001F18 51                         push rcx
+  1929 00001F19 52                         push rdx
+  1930 00001F1A 4152                       push r10
+  1931 00001F1C 4889D8                     mov rax, rbx
+  1932 00001F1F 4889FB                     mov rbx, rdi
+  1933 00001F22 E89EECFFFF                 call cmp
+  1934 00001F27 4883F801                   cmp rax, 1
+  1935 00001F2B 7555                       jne ntsok
+  1936 00001F2D 415A                       pop r10
+  1937 00001F2F 5A                         pop rdx
+  1938 00001F30 59                         pop rcx
+  1939 00001F31 5B                         pop rbx
+  1940 00001F32 58                         pop rax
+  1941 00001F33 5E                         pop rsi
+  1942 00001F34 5F                         pop rdi
+  1943 00001F35 4801C3                     add rbx, rax
+  1944 00001F38 8B03                       mov eax, dword [rbx]
+  1945 00001F3A 4189C5                     mov r13d, eax
+  1946 00001F3D E882000000                 call tagid
+  1947 00001F42 4883FA04                   cmp rdx, 4
+  1948 00001F46 742A                       je qadro
+  1949 00001F48 4183FD09                   cmp r13d, 9
+  1950 00001F4C 7412                       je arrptrs
+  1951 00001F4E 4883EA08                   sub rdx, 8
+  1952 00001F52 4883C30C                   add rbx, 12
+  1953 00001F56 4989D8                     mov r8, rbx
+  1954 00001F59 4801D3                     add rbx, rdx
+  1955 00001F5C 4989D9                     mov r9, rbx
+  1956 00001F5F C3                         ret
+  1957                                     arrptrs:
+  1958 00001F60 4883EA0C                   sub rdx, 12
+  1959 00001F64 4883C310                   add rbx, 16
+  1960 00001F68 4989D8                     mov r8, rbx
+  1961 00001F6B 4801D3                     add rbx, rdx
+  1962 00001F6E 4989D9                     mov r9, rbx
+  1963 00001F71 C3                         ret
+  1964                                     qadro:
+  1965                                  qadro:
+  1966 00001F72 4883C304                   add rbx, 4
+  1967 00001F76 8B03                       mov eax, dword [rbx]
+  1968 00001F78 8906                       mov dword [rsi], eax
+  1969 00001F7A C3                         ret
+  1970                                  etfl:
+  1971 00001F7B 4D31C0                     xor r8, r8
+  1972 00001F7E 4D31C9                     xor r9, r9
+  1973 00001F81 C3                         ret
+  1974                                  ntsok:
+  1975 00001F82 415A                       pop r10
+  1976 00001F84 5A                         pop rdx
+  1977 00001F85 59                         pop rcx
+  1978 00001F86 5B                         pop rbx
+  1979 00001F87 58                         pop rax
+  1980 00001F88 5E                         pop rsi
+  1981 00001F89 5F                         pop rdi
+  1982 00001F8A 4801C3                     add rbx, rax
+  1983 00001F8D 8B03                       mov eax, dword [rbx]
+  1984 00001F8F E830000000                 call tagid
+  1985 00001F94 4983F901                   cmp r9, 1
+  1986 00001F98 740C                       je parse_err
+  1987 00001F9A 4883C304                   add rbx, 4
+  1988 00001F9E 4801D3                     add rbx, rdx
+  1989 00001FA1 E934FFFFFF                 jmp etflp
+  1990                                  parse_err:
+  1991 00001FA6 48BA-                     mov rdx, badtag
+  1991 00001FA8 [BC1F000000000000] 
+  1992 00001FB0 B107                      mov cl, 0x7
+  1993 00001FB2 E857EBFFFF                call cpritn
+  1994 00001FB7 E9BDF3FFFF                jmp newliner
+  1995 00001FBC 6261642074616700        badtag: db 'bad tag', 0
+  1996                                  tagid:
+  1997 00001FC4 4D31C9                     xor r9, r9
+  1998 00001FC7 83F800                     cmp eax, 0
+  1999 00001FCA 7446                       je ui8
+  2000 00001FCC 83F801                     cmp eax, 1
+  2001 00001FCF 7441                       je ui8
+  2002 00001FD1 83F802                     cmp eax, 2
+  2003 00001FD4 7445                       je ui6
+  2004 00001FD6 83F803                     cmp eax, 3
+  2005 00001FD9 7440                       je ui6
+  2006 00001FDB 83F804                     cmp eax, 4
+  2007 00001FDE 7444                       je ui2
+  2008 00001FE0 83F805                     cmp eax, 5
+  2009 00001FE3 743F                       je ui2
+  2010 00001FE5 83F806                     cmp eax, 6
+  2011 00001FE8 743A                       je ui2
+  2012 00001FEA 83F807                     cmp eax, 7
+  2013 00001FED 7423                       je ui8
+  2014 00001FEF 83F808                     cmp eax, 8
+  2015 00001FF2 7442                       je strign
+  2016 00001FF4 83F809                     cmp eax, 9
+  2017 00001FF7 7448                       je array
+  2018 00001FF9 83F80A                     cmp eax, 10
+  2019 00001FFC 742F                       je ui4
+  2020 00001FFE 83F80B                     cmp eax, 11
+  2021 00002001 742A                       je ui4
+  2022 00002003 83F80C                     cmp eax, 12
+  2023 00002006 7425                       je ui4
+  2024 00002008 4831D2                     xor rdx, rdx
+  2025 0000200B 41B901000000               mov r9, 1
+  2026 00002011 C3                         ret
+  2027                                  ui8:
+  2028 00002012 4831D2                     xor rdx, rdx
+  2029 00002015 BA01000000                 mov rdx, 1
+  2030 0000201A C3                         ret
+  2031                                  ui6:
+  2032 0000201B 4831D2                     xor rdx, rdx
+  2033 0000201E BA02000000                 mov rdx, 2
+  2034 00002023 C3                         ret
+  2035                                  ui2:
+  2036 00002024 4831D2                     xor rdx, rdx
+  2037 00002027 BA04000000                 mov rdx, 4
+  2038 0000202C C3                         ret
+  2039                                  ui4:
+  2040 0000202D 4831D2                     xor rdx, rdx
+  2041 00002030 BA08000000                 mov rdx, 8
+  2042 00002035 C3                         ret
+  2043                                  strign:
+  2044 00002036 53                         push rbx
+  2045 00002037 488B5304                   mov rdx, qword [rbx + 4]
+  2046 0000203B 4883C208                   add rdx, 8
+  2047 0000203F 5B                         pop rbx
+  2048 00002040 C3                         ret
+  2049                                  array:
+  2050 00002041 53                         push rbx
+  2051 00002042 4883C304                   add rbx, 4
+  2052 00002046 8B03                       mov eax, dword [rbx]
+  2053 00002048 4883C304                   add rbx, 4
+  2054 0000204C 488B0B                     mov rcx, qword [rbx]
+  2055 0000204F 4883C308                   add rbx, 8
+  2056 00002053 83F808                     cmp eax, 8
+  2057 00002056 7416                       je arrstr
+  2058 00002058 51                         push rcx
+  2059 00002059 E866FFFFFF                 call tagid
+  2060 0000205E 59                         pop rcx
+  2061 0000205F 4889C8                     mov rax, rcx
+  2062 00002062 48F7E2                     mul rdx
+  2063 00002065 4883C00C                   add rax, 12
+  2064 00002069 4889C2                     mov rdx, rax
+  2065 0000206C 5B                         pop rbx
+  2066 0000206D C3                         ret
+  2067                                  arrstr:
+  2068 0000206E 4D31DB                     xor r11, r11
+  2069                                  arrstrlp:
+  2070 00002071 4883F900                   cmp rcx, 0
+  2071 00002075 7412                       je arrstrdone
+  2072 00002077 488B03                     mov rax, qword [rbx]
+  2073 0000207A 4883C008                   add rax, 8
+  2074 0000207E 4901C3                     add r11, rax
+  2075 00002081 4801C3                     add rbx, rax
+  2076 00002084 48FFC9                     dec rcx
+  2077 00002087 EBE8                       jmp arrstrlp
+  2078                                  arrstrdone:
+  2079 00002089 4983C30C                   add r11, 12
+  2080 0000208D 4C89DA                     mov rdx, r11
+  2081 00002090 5B                         pop rbx
+  2082 00002091 C3                         ret
+  2083                                  bint:
+  2084 00002092 4D31DB                     xor r11, r11
+  2085 00002095 4D31E4                     xor r12, r12
+  2086 00002098 4D31ED                     xor r13, r13
+  2087 0000209B 4989DB                     mov r11, rbx
+  2088 0000209E 4989CC                     mov r12, rcx
+  2089 000020A1 4989D5                     mov r13, rdx
+  2090 000020A4 E85EE5FFFF                 call bintrn
+  2091 000020A9 48BA-                      mov rdx, netanyahu
+  2091 000020AB [4D06000000000000] 
+  2092 000020B3 B107                       mov cl, 0x7
+  2093 000020B5 E854EAFFFF                 call cpritn
+  2094 000020BA 4C89D8                     mov rax, r11
+  2095 000020BD E845E5FFFF                 call bintrn
+  2096 000020C2 48BA-                      mov rdx, netanyahu
+  2096 000020C4 [4D06000000000000] 
+  2097 000020CC B107                       mov cl, 0x7
+  2098 000020CE E83BEAFFFF                 call cpritn
+  2099 000020D3 48BA-                      mov rdx, crk
+  2099 000020D5 [462E000000000000] 
+  2100 000020DD B107                       mov cl, 0x7
+  2101 000020DF E82AEAFFFF                 call cpritn
+  2102 000020E4 4C89E0                     mov rax, r12
+  2103 000020E7 E81BE5FFFF                 call bintrn
+  2104 000020EC 48BA-                      mov rdx, netanyahu
+  2104 000020EE [4D06000000000000] 
+  2105 000020F6 B107                       mov cl, 0x7
+  2106 000020F8 E811EAFFFF                 call cpritn
+  2107 000020FD 48BA-                      mov rdx, crk
+  2107 000020FF [462E000000000000] 
+  2108 00002107 B107                       mov cl, 0x7
+  2109 00002109 E800EAFFFF                 call cpritn
+  2110 0000210E 4C89E8                     mov rax, r13
+  2111 00002111 E8F1E4FFFF                 call bintrn
+  2112 00002116 48BA-                      mov rdx, netanyahu
+  2112 00002118 [4D06000000000000] 
+  2113 00002120 B107                       mov cl, 0x7
+  2114 00002122 E8E7E9FFFF                 call cpritn
+  2115 00002127 E94DF2FFFF                 jmp newliner
+  2116                                  clsdo:
+  2117 0000212C E824EAFFFF                 call cls
+  2118 00002131 E980EBFFFF                 jmp tets
+  2119                                  rdsdo:
+  2120 00002136 488B1425[B32E0000]         mov rdx, [cmdc]
+  2121 0000213E 4883C20A                   add rdx, 10
+  2122 00002142 E897EEFFFF                 call gatherer
+  2123 00002147 E855E2FFFF                 call drs
+  2124 0000214C 4D31F6                     xor r14, r14
+  2125 0000214F 41BE00B00700               mov r14, 0x7b000
+  2126                                  dtp:
+  2127 00002155 490FB606                   movzx rax, byte [r14]
+  2128 00002159 E8A9E4FFFF                 call bintrn
+  2129 0000215E 4156                       push r14
+  2130 00002160 48BA-                      mov rdx, netanyahu
+  2130 00002162 [4D06000000000000] 
+  2131 0000216A B107                       mov cl, 0x7
+  2132 0000216C E89DE9FFFF                 call cpritn
+  2133 00002171 48BA-                      mov rdx, medz
+  2133 00002173 [9721000000000000] 
+  2134 0000217B B107                       mov cl, 0x7
+  2135 0000217D E88CE9FFFF                 call cpritn
+  2136 00002182 415E                       pop r14
+  2137 00002184 4983C601                   add r14, 1
+  2138 00002188 4981FE00B20700             cmp r14, 0x7b200
+  2139 0000218F 0F84E4F1FFFF               je newliner
+  2140 00002195 EBBE                       jmp dtp
+  2141 00002197 2000                    medz: db ' ', 0
+  2142                                  helpdo:
+  2143 00002199 48BA-                      mov rdx, hlptxt
+  2143 0000219B [802B000000000000] 
+  2144 000021A3 B107                       mov cl, 0x07
+  2145 000021A5 E864E9FFFF                 call cpritn
+  2146 000021AA E907EBFFFF                 jmp tets
+  2147                                  verdo:
+  2148 000021AF 48BA-                      mov rdx, vertxt
+  2148 000021B1 [6F2E000000000000] 
+  2149 000021B9 B107                       mov cl, 0x07
+  2150 000021BB E84EE9FFFF                 call cpritn
+  2151 000021C0 E9F1EAFFFF                 jmp tets
+  2152                                  creddo:
+  2153 000021C5 48BA-                      mov rdx, credtxt
+  2153 000021C7 [7C2D000000000000] 
+  2154 000021CF B107                       mov cl, 0x07
+  2155 000021D1 E838E9FFFF                 call cpritn
+  2156 000021D6 E9DBEAFFFF                 jmp tets
+  2157                                  mmpdo:
+  2158 000021DB 488B1425[B32E0000]         mov rdx, [cmdc]
+  2159 000021E3 4883C208                   add rdx, 8
+  2160 000021E7 E8F2EDFFFF                 call gatherer
+  2161 000021EC 4983F902                   cmp r9, 2
+  2162 000021F0 0F8246EEFFFF               jb sike
+  2163 000021F6 4883C202                   add rdx, 2
+  2164 000021FA 4989C7                     mov r15, rax
+  2165 000021FD E8DCEDFFFF                 call gatherer
+  2166 00002202 4983F901                   cmp r9, 1
+  2167 00002206 0F8430EEFFFF               je sike
+  2168 0000220C 498907                     mov [r15], rax
+  2169 0000220F B107                       mov cl, 0x07
+  2170 00002211 48BA-                      mov rdx, done
+  2170 00002213 [802E000000000000] 
+  2171 0000221B E8EEE8FFFF                 call cpritn
+  2172 00002220 E954F1FFFF                 jmp newliner
+  2173                                  echdo:
+  2174 00002225 488B0425[B32E0000]         mov rax, [cmdc]
+  2175 0000222D 4883C010                   add rax, 16
+  2176 00002231 488B0425[AB2E0000]         mov rax, [clen]
+  2177 00002239 4831D2                     xor rdx, rdx
+  2178 0000223C B902000000                 mov rcx, 2
+  2179 00002241 48F7F1                     div rcx
+  2180 00002244 4889C2                     mov rdx, rax
+  2181 00002247 4883EA08                   sub rdx, 8
+  2182 0000224B 488B0425[B32E0000]         mov rax, [cmdc]
+  2183 00002253 4883C010                   add rax, 16
+  2184 00002257 4831C9                     xor rcx, rcx
+  2185 0000225A 4D31C0                     xor r8, r8
+  2186                                  cpri:
+  2187 0000225D 4983C001                   add r8, 1
+  2188 00002261 8A08                       mov byte cl, [rax]
+  2189 00002263 488B1C25[232A0000]         mov rbx, [curzor]
+  2190 0000226B 880B                       mov byte [rbx], cl
+  2191 0000226D C6430107                   mov byte [rbx + 1], 0x07
+  2192 00002271 4939D0                     cmp r8, rdx
+  2193 00002274 0F84FFF0FFFF               je newliner
+  2194 0000227A 4883C302                   add rbx, 2
+  2195 0000227E 48891C25[232A0000]         mov [curzor], rbx
+  2196 00002286 4883C002                   add rax, 2
+  2197 0000228A EBD1                       jmp cpri
+  2198                                  trando:
+  2199 0000228C 488B1425[B32E0000]         mov rdx, [cmdc]
+  2200 00002294 4883C214                   add rdx, 20
+  2201 00002298 E841EDFFFF                 call gatherer
+  2202 0000229D 4983F901                   cmp r9, 1
+  2203 000022A1 0F8439020000               je errr
+  2204 000022A7 4983FA01                   cmp r10, 1
+  2205 000022AB 7407                       je ijex
+  2206 000022AD E8CBE2FFFF                 call hexbintrn
+  2207 000022B2 EB05                       jmp cller
+  2208                                  ijex:
+  2209 000022B4 E84EE3FFFF                 call bintrn
+  2210                                  cller:
+  2211 000022B9 48BA-                      mov rdx, netanyahu
+  2211 000022BB [4D06000000000000] 
+  2212 000022C3 B107                       mov cl, 0x07
+  2213 000022C5 E844E8FFFF                 call cpritn
+  2214 000022CA E9AAF0FFFF                 jmp newliner
+  2215                                  whtdo:
+  2216 000022CF 0F20C0                     mov rax, cr0
+  2217 000022D2 E8A6E2FFFF                 call hexbintrn
+  2218 000022D7 48BA-                      mov rdx, netanyahu
+  2218 000022D9 [4D06000000000000] 
+  2219 000022E1 B107                       mov cl, 0x07
+  2220 000022E3 E826E8FFFF                 call cpritn
+  2221 000022E8 48BA-                      mov rdx, ciarka
+  2221 000022EA [D32D000000000000] 
+  2222 000022F2 B107                       mov cl, 0x07
+  2223 000022F4 E815E8FFFF                 call cpritn
+  2224 000022F9 0F20D0                     mov rax, cr2
+  2225 000022FC E87CE2FFFF                 call hexbintrn
+  2226 00002301 48BA-                      mov rdx, netanyahu
+  2226 00002303 [4D06000000000000] 
+  2227 0000230B B107                       mov cl, 0x07
+  2228 0000230D E8FCE7FFFF                 call cpritn
+  2229 00002312 48BA-                      mov rdx, ciarka2
+  2229 00002314 [E42D000000000000] 
+  2230 0000231C B107                       mov cl, 0x07
+  2231 0000231E E8EBE7FFFF                 call cpritn
+  2232 00002323 0F20D8                     mov rax, cr3
+  2233 00002326 E852E2FFFF                 call hexbintrn
+  2234 0000232B 48BA-                      mov rdx, netanyahu
+  2234 0000232D [4D06000000000000] 
+  2235 00002335 B107                       mov cl, 0x07
+  2236 00002337 E8D2E7FFFF                 call cpritn
+  2237 0000233C 48BA-                      mov rdx, ciarka3
+  2237 0000233E [F52D000000000000] 
+  2238 00002346 B107                       mov cl, 0x07
+  2239 00002348 E8C1E7FFFF                 call cpritn
+  2240 0000234D 0F20E0                     mov rax, cr4
+  2241 00002350 E828E2FFFF                 call hexbintrn
+  2242 00002355 48BA-                      mov rdx, netanyahu
+  2242 00002357 [4D06000000000000] 
+  2243 0000235F B107                       mov cl, 0x07
+  2244 00002361 E8A8E7FFFF                 call cpritn
+  2245 00002366 48BA-                      mov rdx, ciarka4
+  2245 00002368 [1A2E000000000000] 
+  2246 00002370 B107                       mov cl, 0x07
+  2247 00002372 E897E7FFFF                 call cpritn
+  2248 00002377 440F20C0                   mov rax, cr8
+  2249 0000237B E8FDE1FFFF                 call hexbintrn
+  2250 00002380 48BA-                      mov rdx, netanyahu
+  2250 00002382 [4D06000000000000] 
+  2251 0000238A B107                       mov cl, 0x07
+  2252 0000238C E87DE7FFFF                 call cpritn
+  2253 00002391 48BA-                      mov rdx, ciarka8
+  2253 00002393 [482E000000000000] 
+  2254 0000239B B107                       mov cl, 0x07
+  2255 0000239D E86CE7FFFF                 call cpritn
+  2256 000023A2 E9D2EFFFFF                 jmp newliner
+  2257                                  debdo:
+  2258 000023A7 0F21C0                     mov rax, dr0
+  2259 000023AA E8CEE1FFFF                 call hexbintrn
+  2260 000023AF 48BA-                      mov rdx, netanyahu
+  2260 000023B1 [4D06000000000000] 
+  2261 000023B9 B107                       mov cl, 0x07
+  2262 000023BB E84EE7FFFF                 call cpritn
+  2263 000023C0 48BA-                      mov rdx, ciarkad
+  2263 000023C2 [BC2E000000000000] 
+  2264 000023CA B107                       mov cl, 0x07
+  2265 000023CC E83DE7FFFF                 call cpritn
+  2266 000023D1 0F21C8                     mov rax, dr1
+  2267 000023D4 E8A4E1FFFF                 call hexbintrn
+  2268 000023D9 48BA-                      mov rdx, netanyahu
+  2268 000023DB [4D06000000000000] 
+  2269 000023E3 B107                       mov cl, 0x07
+  2270 000023E5 E824E7FFFF                 call cpritn
+  2271 000023EA 48BA-                      mov rdx, ciarka1d
+  2271 000023EC [C52E000000000000] 
+  2272 000023F4 B107                       mov cl, 0x07
+  2273 000023F6 E813E7FFFF                 call cpritn
+  2274 000023FB 0F21D0                     mov rax, dr2
+  2275 000023FE E87AE1FFFF                 call hexbintrn
+  2276 00002403 48BA-                      mov rdx, netanyahu
+  2276 00002405 [4D06000000000000] 
+  2277 0000240D B107                       mov cl, 0x07
+  2278 0000240F E8FAE6FFFF                 call cpritn
+  2279 00002414 48BA-                      mov rdx, ciarka2d
+  2279 00002416 [CE2E000000000000] 
+  2280 0000241E B107                       mov cl, 0x07
+  2281 00002420 E8E9E6FFFF                 call cpritn
+  2282 00002425 0F21D8                     mov rax, dr3
+  2283 00002428 E850E1FFFF                 call hexbintrn
+  2284 0000242D 48BA-                      mov rdx, netanyahu
+  2284 0000242F [4D06000000000000] 
+  2285 00002437 B107                       mov cl, 0x07
+  2286 00002439 E8D0E6FFFF                 call cpritn
+  2287 0000243E 48BA-                      mov rdx, ciarka3d
+  2287 00002440 [D72E000000000000] 
+  2288 00002448 B107                       mov cl, 0x07
+  2289 0000244A E8BFE6FFFF                 call cpritn
+  2290 0000244F 0F21F0                     mov rax, dr6
+  2291 00002452 E826E1FFFF                 call hexbintrn
+  2292 00002457 48BA-                      mov rdx, netanyahu
+  2292 00002459 [4D06000000000000] 
+  2293 00002461 B107                       mov cl, 0x07
+  2294 00002463 E8A6E6FFFF                 call cpritn
+  2295 00002468 48BA-                      mov rdx, ciarka6d
+  2295 0000246A [E02E000000000000] 
+  2296 00002472 B107                       mov cl, 0x07
+  2297 00002474 E895E6FFFF                 call cpritn
+  2298 00002479 0F21F8                     mov rax, dr7
+  2299 0000247C E8FCE0FFFF                 call hexbintrn
+  2300 00002481 48BA-                      mov rdx, netanyahu
+  2300 00002483 [4D06000000000000] 
+  2301 0000248B B107                       mov cl, 0x07
+  2302 0000248D E87CE6FFFF                 call cpritn
+  2303 00002492 48BA-                      mov rdx, ciarka7d
+  2303 00002494 [E92E000000000000] 
+  2304 0000249C B107                       mov cl, 0x07
+  2305 0000249E E86BE6FFFF                 call cpritn
+  2306 000024A3 E9D1EEFFFF                 jmp newliner
+  2307                                  memfdo:
+  2308 000024A8 488B1425[B32E0000]         mov rdx, [cmdc]
+  2309 000024B0 4883C20A                   add rdx, 10
+  2310 000024B4 E825EBFFFF                 call gatherer
+  2311 000024B9 4983F901                   cmp r9, 1
+  2312 000024BD 7421                       je errr
+  2313 000024BF 8A18                       mov bl, byte [rax]
+  2314 000024C1 480FB6C3                   movzx rax, byte bl
+  2315 000024C5 E8B3E0FFFF                 call hexbintrn
+  2316 000024CA 48BA-                      mov rdx, netanyahu
+  2316 000024CC [4D06000000000000] 
+  2317 000024D4 B107                       mov cl, 0x07
+  2318 000024D6 E833E6FFFF                 call cpritn
+  2319 000024DB E999EEFFFF                 jmp newliner
+  2320                                  errr:
+  2321 000024E0 48BA-                      mov rdx, numer
+  2321 000024E2 [FE2D000000000000] 
+  2322 000024EA B107                       mov cl, 0x07
+  2323 000024EC E81DE6FFFF                 call cpritn
+  2324 000024F1 E983EEFFFF                 jmp newliner
+  2325                                  prd:
+  2326 000024F6 488B1425[B32E0000]         mov rdx, [cmdc]
+  2327 000024FE 4883C20E                   add rdx, 14
+  2328 00002502 E8D7EAFFFF                 call gatherer
+  2329 00002507 4983F901                   cmp r9, 1
+  2330 0000250B 74D3                       je errr
+  2331 0000250D 4989C7                     mov r15, rax
+  2332 00002510 4157                       push r15
+  2333 00002512 4831C0                     xor rax, rax
+  2334 00002515 B800000E00                 mov rax, 0xe0000
+  2335                                  prl:
+  2336 0000251A 813852534420               cmp dword [rax], 'RSD '
+  2337 00002520 7509                       jne dalsi
+  2338 00002522 81780450545220             cmp dword [rax + 4], 'PTR '
+  2339 00002529 741E                       je konecne
+  2340                                  dalsi:
+  2341 0000252B 4883C010                   add rax, 16
+  2342 0000252F 483D00001000               cmp rax, 0x100000
+  2343 00002535 0F8373030000               jae crash
+  2344 0000253B EBDD                       jmp prl
+  2345                                  dalsii:
+  2346 0000253D 4883E814                   sub rax, 20
+  2347 00002541 EBE8                       jmp dalsi
+  2348                                  dalsiy:
+  2349 00002543 4883E824                   sub rax, 36
+  2350 00002547 EBE2                       jmp dalsi
+  2351                                  konecne:
+  2352 00002549 4831DB                     xor rbx, rbx
+  2353 0000254C 4831C9                     xor rcx, rcx
+  2354 0000254F 4831D2                     xor rdx, rdx
+  2355                                  klp:
+  2356 00002552 4C0FB610                   movzx r10, byte [rax]
+  2357 00002556 4C01D3                     add rbx, r10
+  2358 00002559 4883C201                   add rdx, 1
+  2359 0000255D 4883C001                   add rax, 1
+  2360 00002561 4883FA14                   cmp rdx, 20
+  2361 00002565 75EB                       jne klp
+  2362 00002567 80FB00                     cmp bl, 0
+  2363 0000256A 75D1                       jne dalsii
+  2364 0000256C 4883E805                   sub rax, 5
+  2365 00002570 803800                     cmp byte [rax], 0
+  2366 00002573 750B                       jne acpd
+  2367 00002575 4831DB                     xor rbx, rbx
+  2368 00002578 8B5801                     mov ebx, dword [rax + 1]
+  2369 0000257B 4831D2                     xor rdx, rdx
+  2370 0000257E EB33                       jmp nextwak
+  2371                                  acpd:
+  2372 00002580 4883E80F                   sub rax, 15
+  2373 00002584 4831DB                     xor rbx, rbx
+  2374 00002587 4831D2                     xor rdx, rdx
+  2375                                  llp:
+  2376 0000258A 4C0FB610                   movzx r10, byte [rax]
+  2377 0000258E 4C01D3                     add rbx, r10
+  2378 00002591 4883C201                   add rdx, 1
+  2379 00002595 4883C001                   add rax, 1
+  2380 00002599 4883FA24                   cmp rdx, 36
+  2381 0000259D 75EB                       jne llp
+  2382 0000259F 80FB00                     cmp bl, 0
+  2383 000025A2 759F                       jne dalsiy
+  2384 000025A4 4831DB                     xor rbx, rbx
+  2385 000025A7 4831D2                     xor rdx, rdx
+  2386 000025AA 8B58EC                     mov ebx, dword [rax - 20]
+  2387 000025AD 488B50F4                   mov rdx, qword [rax - 12]
+  2388 000025B1 EB00                       jmp nextwak
+  2389                                  nextwak:
+  2390 000025B3 4883FA00                   cmp rdx, 0
+  2391 000025B7 7432                       je rads
+  2392 000025B9 813A58534454               cmp dword [rdx],'XSDT'
+  2393 000025BF 0F85E9020000               jne crash
+  2394 000025C5 4831C0                     xor rax, rax
+  2395 000025C8 8B4204                     mov eax, dword [rdx + 4]
+  2396 000025CB 4883E824                   sub rax, 36
+  2397 000025CF 48C1E803                   shr rax, 3
+  2398 000025D3 4989D0                     mov r8, rdx
+  2399 000025D6 4983C024                   add r8, 36
+  2400                                  xls:
+  2401 000025DA 498B08                     mov rcx, qword [r8]
+  2402 000025DD 813941504943               cmp dword [rcx], 'APIC'
+  2403 000025E3 7438                       je wfound
+  2404 000025E5 4983C008                   add r8, 8
+  2405 000025E9 EBEF                       jmp xls
+  2406                                  rads:
+  2407 000025EB 813B52534454               cmp dword [rbx], 'RSDT'
+  2408 000025F1 0F85B7020000               jne crash
+  2409 000025F7 4831C0                     xor rax, rax
+  2410 000025FA 8B4304                     mov eax, dword [rbx + 4]
+  2411 000025FD 4883E824                   sub rax, 36
+  2412 00002601 48C1E802                   shr rax, 2
+  2413 00002605 4989D8                     mov r8, rbx
+  2414 00002608 4983C024                   add r8, 36
+  2415                                  rls:
+  2416 0000260C 418B08                     mov ecx, dword [r8]
+  2417 0000260F 813941504943               cmp dword [rcx], 'APIC'
+  2418 00002615 7406                       je wfound
+  2419 00002617 4983C004                   add r8, 4
+  2420 0000261B EBEF                       jmp rls
+  2421                                  wfound:
+  2422 0000261D 4D31E4                     xor r12, r12
+  2423 00002620 4989CC                     mov r12, rcx
+  2424 00002623 4883C104                   add rcx, 4
+  2425 00002627 8B01                       mov eax, dword [rcx]
+  2426 00002629 4901C4                     add r12, rax
+  2427 0000262C 4883C128                   add rcx, 40
+  2428 00002630 4D31ED                     xor r13, r13
+  2429 00002633 4D31C9                     xor r9, r9
+  2430 00002636 4D31DB                     xor r11, r11
+  2431 00002639 49BB-                      mov r11, crid
+  2431 0000263B [0030000000000000] 
+  2432                                  nlop:
+  2433 00002643 8A19                       mov bl, byte [rcx]
+  2434 00002645 480FB64101                 movzx rax, byte [rcx + 1]
+  2435 0000264A 80FB00                     cmp bl, 0
+  2436 0000264D 751D                       jne adfa
+  2437 0000264F 8B5104                     mov edx, dword [rcx + 4]
+  2438 00002652 F6C201                     test dl, 1
+  2439 00002655 7411                       je dsbld
+  2440 00002657 4989DA                     mov r10, rbx
+  2441 0000265A 8A5903                     mov bl, byte [rcx + 3]
+  2442 0000265D 41881B                     mov byte [r11], bl
+  2443 00002660 49FFC3                     inc r11
+  2444 00002663 49FFC5                     inc r13
+  2445 00002666 EB04                       jmp adfa
+  2446                                  dsbld:
+  2447 00002668 4983C101                   add r9, 1
+  2448                                  adfa:
+  2449 0000266C 4801C1                     add rcx, rax
+  2450 0000266F 4C39E1                     cmp rcx, r12
+  2451 00002672 72CF                       jb nlop
+  2452 00002674 48B9-                      mov rcx, crid
+  2452 00002676 [0030000000000000] 
+  2453 0000267E 4D31FF                     xor r15, r15
+  2454                                  crcntr:
+  2455 00002681 803900                     cmp byte [rcx], 0
+  2456 00002684 7406                       je nomore
+  2457 00002686 4983C701                   add r15, 1
+  2458 0000268A EBF5                       jmp crcntr
+  2459                                  nomore:
+  2460 0000268C 4C89E8                     mov rax, r13
+  2461 0000268F 50                         push rax
+  2462 00002690 48BA-                      mov rdx, fndn
+  2462 00002692 [5C2A000000000000] 
+  2463 0000269A B107                       mov cl, 0x7
+  2464 0000269C E86DE4FFFF                 call cpritn
+  2465 000026A1 58                         pop rax
+  2466 000026A2 4155                       push r13
+  2467 000026A4 E85EDFFFFF                 call bintrn
+  2468 000026A9 48BA-                      mov rdx, netanyahu
+  2468 000026AB [4D06000000000000] 
+  2469 000026B3 B107                       mov cl, 0x7
+  2470 000026B5 E854E4FFFF                 call cpritn
+  2471 000026BA B81B000000                 mov eax, 0x1b
+  2472 000026BF 0F32                       rdmsr
+  2473 000026C1 48C1E220                   shl rdx, 32
+  2474 000026C5 4809D0                     or rax, rdx
+  2475 000026C8 48C7C200F0FFFF             mov rdx, 0xFFFFFFFFFFFFF000
+  2476 000026CF 4821D0                     and rax,rdx
+  2477 000026D2 50                         push rax
+  2478 000026D3 B801000000                 mov eax, 1
+  2479 000026D8 0FA2                       cpuid
+  2480 000026DA C1EB18                     shr ebx, 24
+  2481 000026DD 480FB6DB                   movzx rbx, bl
+  2482 000026E1 58                         pop rax
+  2483 000026E2 48BA-                      mov rdx, crid
+  2483 000026E4 [0030000000000000] 
+  2484 000026EC 415D                       pop r13
+  2485 000026EE 415F                       pop r15
+  2486 000026F0 4D39FD                     cmp r13, r15
+  2487 000026F3 7209                       jb nigggerr
+  2488 000026F5 4D89FD                     mov r13, r15
+  2489 000026F8 41B901000000               mov r9, 1
+  2490                                  nigggerr:
+  2491 000026FE 4155                       push r13
+  2492                                  niggger:
+  2493 00002700 4983FD00                   cmp r13, 0
+  2494 00002704 0F841C010000               je doner
+  2495 0000270A 48391A                     cmp [rdx], rbx
+  2496 0000270D 0F8400010000               je apsk
+  2497 00002713 8A0A                       mov cl, byte [rdx]
+  2498 00002715 440FB6D1                   movzx r10d, cl
+  2499 00002719 41C1E218                   shl r10d, 24
+  2500 0000271D 44899010030000             mov dword [rax + 0x310], r10d
+  2501 00002724 C78000030000004500-        mov dword [rax + 0x300], 0x4500
+  2501 0000272D 00                 
+  2502                                  walter:
+  2503 0000272E 448B9800030000             mov r11d, [rax + 0x300]
+  2504 00002735 41F7C300100000             test r11d, 1 << 12
+  2505 0000273C 75F0                       jnz walter
+  2506 0000273E 50                         push rax
+  2507 0000273F 53                         push rbx
+  2508 00002740 51                         push rcx
+  2509 00002741 52                         push rdx
+  2510 00002742 4151                       push r9
+  2511 00002744 E461                       in al, 0x61
+  2512 00002746 24FC                       and al, 0xfc
+  2513 00002748 0C01                       or al, 0x1
+  2514 0000274A E661                       out 0x61, al
+  2515 0000274C B0B0                       mov al, 0xb0
+  2516 0000274E E643                       out 0x43, al
+  2517 00002750 B09C                       mov al, 0x9c
+  2518 00002752 E642                       out 0x42, al
+  2519 00002754 B02E                       mov al, 0x2e
+  2520 00002756 E642                       out 0x42, al
+  2521                                  until:
+  2522 00002758 E461                       in al, 0x61
+  2523 0000275A A820                       test al, 0x20
+  2524 0000275C 74FA                       jz until
+  2525 0000275E 4159                       pop r9
+  2526 00002760 5A                         pop rdx
+  2527 00002761 59                         pop rcx
+  2528 00002762 5B                         pop rbx
+  2529 00002763 58                         pop rax
+  2530 00002764 44899010030000             mov dword [rax + 0x310], r10d
+  2531 0000276B C78000030000008500-        mov dword [rax + 0x300], 0x8500
+  2531 00002774 00                 
+  2532                                  vojtech:
+  2533 00002775 448B9800030000             mov r11d, [rax + 0x300]
+  2534 0000277C 41F7C300100000             test r11d, 1 << 12
+  2535 00002783 75F0                       jnz vojtech
+  2536 00002785 8A0A                       mov cl, byte [rdx]
+  2537 00002787 440FB6D1                   movzx r10d, cl
+  2538 0000278B 41C1E218                   shl r10d, 24
+  2539 0000278F 44899010030000             mov dword [rax + 0x310], r10d
+  2540 00002796 C78000030000014600-        mov dword [rax + 0x300], 0x4601
+  2540 0000279F 00                 
+  2541                                  comoj:
+  2542 000027A0 448B9800030000             mov r11d, [rax + 0x300]
+  2543 000027A7 41F7C300100000             test r11d, 1 << 12
+  2544 000027AE 75F0                       jnz comoj
+  2545 000027B0 50                         push rax
+  2546 000027B1 53                         push rbx
+  2547 000027B2 51                         push rcx
+  2548 000027B3 52                         push rdx
+  2549 000027B4 4151                       push r9
+  2550 000027B6 E859E9FFFF                 call tim
+  2551 000027BB E461                       in al, 0x61
+  2552 000027BD 24FC                       and al, 0xfc
+  2553 000027BF 0C01                       or al, 0x1
+  2554 000027C1 E661                       out 0x61, al
+  2555 000027C3 B0B0                       mov al, 0xb0
+  2556 000027C5 E643                       out 0x43, al
+  2557 000027C7 B0EF                       mov al, 0xEF
+  2558 000027C9 E642                       out 0x42, al
+  2559 000027CB B000                       mov al, 0
+  2560 000027CD E642                       out 0x42, al
+  2561                                  unptil:
+  2562 000027CF E461                       in al, 0x61
+  2563 000027D1 A820                       test al, 0x20
+  2564 000027D3 74FA                       jz unptil
+  2565 000027D5 4159                       pop r9
+  2566 000027D7 5A                         pop rdx
+  2567 000027D8 59                         pop rcx
+  2568 000027D9 5B                         pop rbx
+  2569 000027DA 58                         pop rax
+  2570 000027DB 8A0A                       mov cl, byte [rdx]
+  2571 000027DD 440FB6D1                   movzx r10d, cl
+  2572 000027E1 41C1E218                   shl r10d, 24
+  2573 000027E5 44899010030000             mov dword [rax + 0x310], r10d
+  2574 000027EC C78000030000014600-        mov dword [rax + 0x300], 0x4601
+  2574 000027F5 00                 
+  2575                                  for:
+  2576 000027F6 448B9800030000             mov r11d, [rax + 0x300]
+  2577 000027FD 41F7C300100000             test r11d, 1 << 12
+  2578 00002804 75F0                       jnz for
+  2579 00002806 4883C201                   add rdx, 1
+  2580 0000280A 4983ED01                   sub r13, 1
+  2581 0000280E E9EDFEFFFF                 jmp niggger
+  2582                                  apsk:
+  2583 00002813 4983F901                   cmp r9, 1
+  2584 00002817 7404                       je jomp
+  2585 00002819 4983ED01                   sub r13, 1
+  2586                                  jomp:
+  2587 0000281D 4883C201                   add rdx, 1
+  2588 00002821 E9DAFEFFFF                 jmp niggger
+  2589                                  doner:
+  2590 00002826 415D                       pop r13
+  2591 00002828 4155                       push r13
+  2592 0000282A 48BA-                      mov rdx, crid
+  2592 0000282C [0030000000000000] 
+  2593                                  niglp:
+  2594 00002834 53                         push rbx
+  2595 00002835 48BA-                      mov rdx, waks
+  2595 00002837 [402A000000000000] 
+  2596 0000283F B107                       mov cl,0x7
+  2597 00002841 E8C8E2FFFF                 call cpritn
+  2598 00002846 5B                         pop rbx
+  2599 00002847 415D                       pop r13
+  2600 00002849 48BA-                      mov rdx, crid
+  2600 0000284B [0030000000000000] 
+  2601 00002853 4D31C0                     xor r8, r8
+  2602                                  noglp:
+  2603 00002856 53                         push rbx
+  2604 00002857 4155                       push r13
+  2605 00002859 480FB602                   movzx rax, byte [rdx]
+  2606 0000285D 4839D8                     cmp rax, rbx
+  2607 00002860 7443                       je apk
+  2608 00002862 52                         push rdx
+  2609 00002863 4150                       push r8
+  2610 00002865 E813DDFFFF                 call hexbintrn
+  2611 0000286A 48BA-                      mov rdx, netanyahu
+  2611 0000286C [4D06000000000000] 
+  2612 00002874 B107                       mov cl, 0x7
+  2613 00002876 E893E2FFFF                 call cpritn
+  2614 0000287B 48BA-                      mov rdx, med
+  2614 0000287D [6D2E000000000000] 
+  2615 00002885 B107                       mov cl, 0x7
+  2616 00002887 E882E2FFFF                 call cpritn
+  2617 0000288C 4158                       pop r8
+  2618 0000288E 5A                         pop rdx
+  2619 0000288F 415D                       pop r13
+  2620 00002891 5B                         pop rbx
+  2621 00002892 4883C201                   add rdx, 1
+  2622 00002896 4983C001                   add r8, 1
+  2623 0000289A 4D39E8                     cmp r8, r13
+  2624 0000289D 0F84D6EAFFFF               je newliner
+  2625 000028A3 EBB1                       jmp noglp
+  2626                                  apk:
+  2627 000028A5 415D                       pop r13
+  2628 000028A7 5B                         pop rbx
+  2629 000028A8 4883C201                   add rdx, 1
+  2630 000028AC EBA8                       jmp noglp
+  2631                                  crash:
+  2632 000028AE 48BA-                      mov rdx, crtx
+  2632 000028B0 [E829000000000000] 
+  2633 000028B8 B107                       mov cl, 0x7
+  2634 000028BA E84FE2FFFF                 call cpritn
+  2635 000028BF E9B5EAFFFF                 jmp newliner
+  2636                                  pltdo:
+  2637 000028C4 48BA-                      mov rdx, sect
+  2637 000028C6 [F929000000000000] 
+  2638 000028CE B107                       mov cl, 0x7
+  2639 000028D0 E839E2FFFF                 call cpritn
+  2640 000028D5 B826000000                 mov rax, 38
+  2641 000028DA E8C2DAFFFF                 call drs
+  2642 000028DF BB00B00700                 mov rbx, 0x7b000
+  2643 000028E4 813B47475546               cmp dword [rbx], 'GGUF'
+  2644 000028EA 7411                       je gboy
+  2645 000028EC 48BA-                      mov rdx, crtx
+  2645 000028EE [E829000000000000] 
+  2646 000028F6 B107                       mov cl, 0x7
+  2647 000028F8 E97CEAFFFF                 jmp newliner
+  2648                                  gboy:
+  2649 000028FD BB00001000                 mov rbx, 0x100000
+  2650 00002902 B826000000                 mov rax, 38
+  2651                                  gby:
+  2652 00002907 50                         push rax
+  2653 00002908 53                         push rbx
+  2654 00002909 E8AF000000                 call memld
+  2655 0000290E 5B                         pop rbx
+  2656 0000290F 58                         pop rax
+  2657 00002910 50                         push rax
+  2658 00002911 53                         push rbx
+  2659 00002912 4C8B3C25[232A0000]         mov r15, qword [curzor]
+  2660 0000291A 4C893C25[112A0000]         mov qword [czs], r15
+  2661 00002922 E8E0DCFFFF                 call bintrn
+  2662 00002927 48BA-                      mov rdx, netanyahu
+  2662 00002929 [4D06000000000000] 
+  2663 00002931 B107                       mov cl, 0x7
+  2664 00002933 E8D6E1FFFF                 call cpritn
+  2665 00002938 4C8B3C25[232A0000]         mov r15, qword [curzor]
+  2666 00002940 4C893C25[ED2D0000]         mov qword [cas], r15
+  2667 00002948 4C8B3C25[112A0000]         mov r15, qword [czs]
+  2668 00002950 4C893C25[232A0000]         mov qword [curzor], r15
+  2669 00002958 5B                         pop rbx
+  2670 00002959 58                         pop rax
+  2671 0000295A 4881C300020000             add rbx,512
+  2672 00002961 4883C001                   add rax, 1
+  2673 00002965 50                         push rax
+  2674 00002966 53                         push rbx
+  2675 00002967 48BB-                      mov rbx, gend
+  2675 00002969 [512E000000000000] 
+  2676 00002971 B800B00700                 mov rax, 0x7b000
+  2677 00002976 E84AE2FFFF                 call cmp
+  2678 0000297B 4989C1                     mov r9, rax
+  2679 0000297E 5B                         pop rbx
+  2680 0000297F 58                         pop rax
+  2681 00002980 4983F901                   cmp r9, 1
+  2682 00002984 7581                       jne gby
+  2683 00002986 4C8B3C25[ED2D0000]         mov r15, qword [cas]
+  2684 0000298E 4C893C25[232A0000]         mov qword [curzor], r15
+  2685 00002996 48BA-                      mov rdx, med
+  2685 00002998 [6D2E000000000000] 
+  2686 000029A0 B107                       mov cl, 0x7
+  2687 000029A2 E867E1FFFF                 call cpritn
+  2688 000029A7 48BA-                      mov rdx, testx
+  2688 000029A9 [092A000000000000] 
+  2689 000029B1 B107                       mov cl, 0x7
+  2690 000029B3 E856E1FFFF                 call cpritn
+  2691 000029B8 E9BCE9FFFF                 jmp newliner
+  2692                                  memld:
+  2693 000029BD 53                         push rbx
+  2694 000029BE E8DED9FFFF                 call drs
+  2695 000029C3 5B                         pop rbx
+  2696 000029C4 B900B00700                 mov rcx, 0x7b000
+  2697 000029C9 4831D2                     xor rdx, rdx
+  2698                                  melp:
+  2699 000029CC 488B39                     mov rdi, qword [rcx]
+  2700 000029CF 48893B                     mov qword [rbx], rdi
+  2701 000029D2 4883C308                   add rbx, 8
+  2702 000029D6 4883C108                   add rcx, 8
+  2703 000029DA 4883C208                   add rdx, 8
+  2704 000029DE 4881FA00020000             cmp rdx, 512
+  2705 000029E5 75E5                       jne melp
+  2706 000029E7 C3                         ret
+  2707 000029E8 6661727420756E7375-     crtx: db 'fart unsuccesful', 0
+  2707 000029F1 6363657366756C00   
+  2708 000029F9 6C6F6164696E672073-     sect: db 'loading sector:', 0
+  2708 00002A02 6563746F723A00     
+  2709 00002A09 2073756363657300        testx: db ' succes', 0
+  2710 00002A11 0000000000000000        czs: dq 0
+  2711 00002A19 77616B65757000          wakup: db 'wakeup', 0
+  2712 00002A20 00                      ttest: db 0
+  2713 00002A21 00                      idt: db 0
+  2714 00002A22 00                      shift: db 0
+  2715 00002A23 0000000000000000        curzor: dq 0
+  2716 00002A2B 6C6F6164616900          pltai: db 'loadai', 0
+  2717 00002A32 696E6F757400            inout: db 'inout', 0
+  2718 00002A38 0000000000000000        tst: dq 0
+  2719 00002A40 207375636365736675-     waks: db ' succesfuly waken up aps: ', 0
+  2719 00002A49 6C792077616B656E20-
+  2719 00002A52 7570206170733A2000 
+  2720 00002A5B 00                      char: db 0
+  2721 00002A5C 6E756D626572206F66-     fndn: db 'number of cores found: ', 0
+  2721 00002A65 20636F72657320666F-
+  2721 00002A6E 756E643A2000       
+  2722                                  idttbl:
+  2723 00002A74 FF0F                    dw 4095
+  2724 00002A76 1002080000000000        dq 0x80210
+  2725 00002A7E 2B2D2D2D2D2D2D2D2D-     head: db '+------------------------------------------------------------------------------+|                                 SofaOS X64                                   |+------------------------------------------------------------------------------+', 0
+  2725 00002A87 2D2D2D2D2D2D2D2D2D-
+  2725 00002A90 2D2D2D2D2D2D2D2D2D-
+  2725 00002A99 2D2D2D2D2D2D2D2D2D-
+  2725 00002AA2 2D2D2D2D2D2D2D2D2D-
+  2725 00002AAB 2D2D2D2D2D2D2D2D2D-
+  2725 00002AB4 2D2D2D2D2D2D2D2D2D-
+  2725 00002ABD 2D2D2D2D2D2D2D2D2D-
+  2725 00002AC6 2D2D2D2D2D2D2D2B7C-
+  2725 00002ACF 202020202020202020-
+  2725 00002AD8 202020202020202020-
+  2725 00002AE1 202020202020202020-
+  2725 00002AEA 202020202020536F66-
+  2725 00002AF3 614F53205836342020-
+  2725 00002AFC 202020202020202020-
+  2725 00002B05 202020202020202020-
+  2725 00002B0E 202020202020202020-
+  2725 00002B17 2020202020207C2B2D-
+  2725 00002B20 2D2D2D2D2D2D2D2D2D-
+  2725 00002B29 2D2D2D2D2D2D2D2D2D-
+  2725 00002B32 2D2D2D2D2D2D2D2D2D-
+  2725 00002B3B 2D2D2D2D2D2D2D2D2D-
+  2725 00002B44 2D2D2D2D2D2D2D2D2D-
+  2725 00002B4D 2D2D2D2D2D2D2D2D2D-
+  2725 00002B56 2D2D2D2D2D2D2D2D2D-
+  2725 00002B5F 2D2D2D2D2D2D2D2D2D-
+  2725 00002B68 2D2D2D2D2D2B00     
+  2726 00002B6F 68656C7000              hlpcm: db 'help', 0
+  2727 00002B74 76657200                vercm: db 'ver', 0
+  2728 00002B78 6372656469747300        cred: db 'credits', 0
+  2729 00002B80 636F6D6D616E64733A-     hlptxt: db 'commands: help = gives u help :>ver = shows curent version of sofaoscredits = tels u who made this oscls = clears the screenwhatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8saythis = echoes back what u type after ittranslate = converts hex number to decimal and backpeek = shows u whats stored at a memory addressput = puts number to a memorytime = shows timewhatindr = shows u whats in dr0,dr1,dr2,dr3,dr6 and dr7secr = reads what in disk on that sectorwakeup = wakes up some number of cores that u chose', 0
+  2729 00002B89 2068656C70203D2067-
+  2729 00002B92 697665732075206865-
+  2729 00002B9B 6C70203A3E76657220-
+  2729 00002BA4 3D2073686F77732063-
+  2729 00002BAD 7572656E7420766572-
+  2729 00002BB6 73696F6E206F662073-
+  2729 00002BBF 6F66616F7363726564-
+  2729 00002BC8 697473203D2074656C-
+  2729 00002BD1 7320752077686F206D-
+  2729 00002BDA 616465207468697320-
+  2729 00002BE3 6F73636C73203D2063-
+  2729 00002BEC 6C6561727320746865-
+  2729 00002BF5 2073637265656E7768-
+  2729 00002BFE 6174696E6372203D20-
+  2729 00002C07 73686F777320752077-
+  2729 00002C10 6861747320696E2063-
+  2729 00002C19 72302C6372322C6372-
+  2729 00002C22 332C63723420616E64-
+  2729 00002C2B 206372387361797468-
+  2729 00002C34 6973203D206563686F-
+  2729 00002C3D 6573206261636B2077-
+  2729 00002C46 686174207520747970-
+  2729 00002C4F 652061667465722069-
+  2729 00002C58 747472616E736C6174-
+  2729 00002C61 65203D20636F6E7665-
+  2729 00002C6A 72747320686578206E-
+  2729 00002C73 756D62657220746F20-
+  2729 00002C7C 646563696D616C2061-
+  2729 00002C85 6E64206261636B7065-
+  2729 00002C8E 656B203D2073686F77-
+  2729 00002C97 732075207768617473-
+  2729 00002CA0 2073746F7265642061-
+  2729 00002CA9 742061206D656D6F72-
+  2729 00002CB2 792061646472657373-
+  2729 00002CBB 707574203D20707574-
+  2729 00002CC4 73206E756D62657220-
+  2729 00002CCD 746F2061206D656D6F-
+  2729 00002CD6 727974696D65203D20-
+  2729 00002CDF 73686F77732074696D-
+  2729 00002CE8 6577686174696E6472-
+  2729 00002CF1 203D2073686F777320-
+  2729 00002CFA 752077686174732069-
+  2729 00002D03 6E206472302C647231-
+  2729 00002D0C 2C6472322C6472332C-
+  2729 00002D15 64723620616E642064-
+  2729 00002D1E 723773656372203D20-
+  2729 00002D27 726561647320776861-
+  2729 00002D30 7420696E206469736B-
+  2729 00002D39 206F6E207468617420-
+  2729 00002D42 736563746F7277616B-
+  2729 00002D4B 657570203D2077616B-
+  2729 00002D54 657320757020736F6D-
+  2729 00002D5D 65206E756D62657220-
+  2729 00002D66 6F6620636F72657320-
+  2729 00002D6F 746861742075206368-
+  2729 00002D78 6F736500           
+  2730 00002D7C 6920776173206D6164-     credtxt: db 'i was made by scrt401                                                ', 0
+  2730 00002D85 652062792073637274-
+  2730 00002D8E 343031202020202020-
+  2730 00002D97 202020202020202020-
+  2730 00002DA0 202020202020202020-
+  2730 00002DA9 202020202020202020-
+  2730 00002DB2 202020202020202020-
+  2730 00002DBB 20202020202000     
+  2731 00002DC2 77686174696E637200      wht: db 'whatincr', 0
+  2732 00002DCB 7361797468697300        echcm: db 'saythis', 0
+  2733 00002DD3 20696E206372302C00      ciarka: db ' in cr0,', 0
+  2734 00002DDC 7365747570616900        stai: db 'setupai', 0
+  2735 00002DE4 20696E206372322C00      ciarka2: db ' in cr2,', 0
+  2736 00002DED 0000000000000000        cas: dq 0
+  2737 00002DF5 20696E206372332C00      ciarka3: db ' in cr3,', 0
+  2738 00002DFE 6E6F20696465612077-     numer: db 'no idea what that number is', 0
+  2738 00002E07 686174207468617420-
+  2738 00002E10 6E756D626572206973-
+  2738 00002E19 00                 
+  2739 00002E1A 20696E206372342C00      ciarka4: db ' in cr4,', 0
+  2740 00002E23 7065656B00              memf: db 'peek', 0
+  2741 00002E28 70757400                memp: db 'put', 0
+  2742 00002E2C 74696D6500              time: db 'time', 0
+  2743 00002E31 67656E6572616C2E61-     gnar: db 'general.architecture', 0
+  2743 00002E3A 726368697465637475-
+  2743 00002E43 726500             
+  2744 00002E46 3A00                    crk: db ':', 0
+  2745 00002E48 20696E206372382C00      ciarka8: db ' in cr8,', 0
+  2746 00002E51 656E646F6667677566-     gend: db 'endofggufmoddelfile', 0
+  2746 00002E5A 6D6F6464656C66696C-
+  2746 00002E63 6500               
+  2747 00002E65 0000000000000000        ccnt: dq 0
+  2748 00002E6D 2000                    med: db ' ', 0
+  2749 00002E6F 76657273696F6E2031-     vertxt: db 'version 1 non ai', 0
+  2749 00002E78 206E6F6E20616900   
+  2750 00002E80 446F6E6500              done: db 'Done', 0
+  2751 00002E85 636C7300                clscm: db 'cls', 0
+  2752 00002E89 77686174696E647200      wdr: db 'whatindr', 0
+  2753 00002E92 2875736572293E00        usert: db '(user)>', 0
+  2754 00002E9A 2F2F73797374656D2F-     syst: db '//system//>', 0
+  2754 00002EA3 2F3E00             
+  2755 00002EA6 7365637200              reds: db 'secr', 0
+  2756 00002EAB 0000000000000000        clen: dq 0
+  2757 00002EB3 0000000000000000        cmdc: dq 0
+  2758 00002EBB 00                      chat: db 0
+  2759 00002EBC 20696E206472302C00      ciarkad: db ' in dr0,', 0
+  2760 00002EC5 20696E206472312C00      ciarka1d: db ' in dr1,', 0
+  2761 00002ECE 20696E206472322C00      ciarka2d: db ' in dr2,', 0
+  2762 00002ED7 20696E206472332C00      ciarka3d: db ' in dr3,', 0
+  2763 00002EE0 20696E206472362C00      ciarka6d: db ' in dr6,', 0
+  2764 00002EE9 20696E2064723700        ciarka7d: db ' in dr7', 0
+  2765 00002EF1 7472616E736C617465-     tran: db 'translate', 0
+  2765 00002EFA 00                 
+  2766 00002EFB 0000000000000000        relad: dq 0
+  2767 00002F03 00<rep FDh>             times 12288 - ($ - $$) db 0
+  2768 00003000 00<rep 100h>            crid: times 256 db 0
+  2769                                  kniha equ 0x900000
+  2770                                  mbf equ 160
+  2771 00003100 00<rep 1000h>           hlpg: times 4096 db 0
+  2772                                  fremm:
