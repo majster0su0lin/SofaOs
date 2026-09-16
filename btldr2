@@ -21,7 +21,7 @@ hltx:
    call crint
    mov ah, 0x42
    mov dl, [drdsk]
-   mov si, DAP
+   mov si, lbashit
    int 0x13
    jc near loaderror
    xor ebx, ebx
@@ -66,10 +66,10 @@ loaderror:
    mov si, kebad
    call crint
    jmp $
-DAP:
+lbashit:
 db 16
 db 0
-dw 33
+dw 51
 dw 0x1000
 dw 0x0000
 dq 5

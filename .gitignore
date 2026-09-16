@@ -1,2 +1,3 @@
 kernel.save
-SofaOs.iso
+*.iso
+stage2.bin
