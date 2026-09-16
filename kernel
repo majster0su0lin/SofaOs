@@ -2064,7 +2064,7 @@ armx:
    mov dword [sml], 0xff800000
    mov qword [psp], 0
    xor r9, r9
-amx_lp:
+amxlp:
    cmp r9, 49152
    jae amxdone
    movss xmm0, dword [rbx + r9*4]
