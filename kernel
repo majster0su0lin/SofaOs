@@ -3149,7 +3149,7 @@ verdo:
    mov rdx, vertxt
    mov cl, 0x07
    call cpritn
-   jmp tets
+   jmp newliner
 creddo:
    mov rdx, credtxt
    mov cl, 0x07
@@ -3643,7 +3643,7 @@ pltdo:
    mov rdx, sect
    mov cl, 0x7
    call cpritn
-   mov rax, 842
+   mov rax, 843
    call drs
    mov rbx, 0x7b000
    cmp dword [rbx], 'GGUF'
@@ -3654,7 +3654,7 @@ pltdo:
    jmp newliner
 gboy:
    mov rbx, 0x100000
-   mov rax, 842
+   mov rax, 843
 gby:
    push rax
    push rbx
@@ -3733,7 +3733,24 @@ head: db '+---------------------------------------------------------------------
 hlpcm: db 'help', 0
 vercm: db 'ver', 0
 cred: db 'credits', 0
-hlptxt: db 'commands: help = gives u help :>ver = shows curent version of sofaoscredits = tels u who made this oscls = clears the screenwhatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8saythis = echoes back what u type after ittranslate = converts hex number to decimal and backpeek = shows u whats stored at a memory addressput = puts number to a memorytime = shows timewhatindr = shows u whats in dr0,dr1,dr2,dr3,dr6 and dr7secr = reads what in disk on that sectorwakeup = wakes up some number of cores that u chose', 0
+hlptxt: db 'commands: '
+   db 'help = gives u help                                                             '
+      db 'ver = shows curent version of sofaos                                            '
+         db 'credits = tels u who made this os                                               '
+	    db 'cls = clears the screen                                                         '
+	       db 'whatincr = shows u whats in cr0,cr2,cr3,cr4 and cr8                             '
+	          db 'saythis = echoes back what u type after it                                      '
+		     db 'translate = converts hex number to decimal and back                             '
+		        db 'peek = shows u whats stored at a memory address                                 '
+			   db 'put = puts number to a memory                                                   '
+			      db 'time = shows time                                                               '
+			         db 'whatindr = shows u whats in dr0,dr1,dr2,dr3,dr6 and dr7                         '
+				    db 'secr = reads what in disk on that sector                                        '
+				       db 'wakeup = wakes up some number of cores that u chose                             '
+				          db 'setupai = reads the gguf model header off disk, shows version and tensor count  '
+					     db 'loadai = loads the ai model off disk into memory                                '
+					        db 'askai = feeds wat u type after it through the model, predicts the next token    '
+						   db 'inout = writes a byte to an io port then reads it back     ', 0
 credtxt: db 'i was made by scrt401                                                ', 0
 wht: db 'whatincr', 0
 echcm: db 'saythis', 0
@@ -4043,7 +4060,7 @@ dq 0x3964840
 dq 0x3B14840
 dq 0x37B4840
 dq 0x3CC4840
-times 26112 - ($ - $$) db 0
+times 26624 - ($ - $$) db 0
 chata: times 256 db 0
 crid: times 256 db 0
 kniha equ 0x900000
