@@ -2066,17 +2066,17 @@ armx:
    xor r9, r9
 amx_lp:
    cmp r9, 49152
-   jae amx_done
+   jae amxdone
    movss xmm0, dword [rbx + r9*4]
    movss xmm1, dword [sml]
    ucomiss xmm0, xmm1
-   jbe amx_no
+   jbe amxno
    movss dword [sml], xmm0
    mov qword [psp], r9
-amx_no:
+amxno:
    inc r9
-   jmp amx_lp
-amx_done:
+   jmp amxlp
+amxdone:
    mov rax, qword [psp]
    ret
 psp: dq 0
@@ -2879,10 +2879,10 @@ lendone:
    cmp eax, 0
    jne lendif16
    shl r12, 2
-   jmp lendmul_done
+   jmp lendmuldone
 lendif16:
    shl r12, 1
-lendmul_done:
+lendmuldone:
    lea rbx, [rbx + 4 + r13*8]
    mov eax, dword [rbx]
    add rbx, 4
