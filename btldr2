@@ -12,10 +12,10 @@ clp:
 cen:
    ret
 start:
-   mov [drdsk], dl
    xor ax, ax
    mov ds, ax
    mov es, ax
+   mov [drdsk], dl
 hltx:
    mov si, hellotxt
    call crint

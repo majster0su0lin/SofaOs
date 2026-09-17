@@ -67,6 +67,9 @@ gdtp:
 CIDE_SEG equ gdtc -gdts
 DATA_SEG equ gdtd - gdts
 CODE67_SEG equ gdt67 - gdts
+IDT_BASE equ 0x80000
+KBD_VEC equ 0x21
+TENSOR_TBL_BASE equ 0x90000
 disk: db 0
 bbios: db "bye bye bios forever", 0x0D, 0x0A, 0
 pamet: dw 0
@@ -1003,7 +1006,7 @@ miguel:
    mov al, 0xFF
    out 0xA1, al
    mov rax, ksnc
-   mov rdi, 0x80420
+   mov rdi, IDT_BASE + KBD_VEC*16
    mov [rdi], ax
    shr rax, 16
    mov word [rdi + 2], CODE67_SEG
@@ -1845,7 +1848,7 @@ tlop:
    push r14
    push r15
    push rbp
-   mov rdi, 0x80000
+   mov rdi, TENSOR_TBL_BASE
    mov rcx, 270
    xor rax, rax
    rep stosq
@@ -1871,7 +1874,7 @@ tlouter:
    je tlskip0
    add r8, 0x100000
    add r8, [smollm2_gguf_hdr_len]
-   mov [0x80000 + r12*8], r8
+   mov [TENSOR_TBL_BASE + r12*8], r8
 tlskip0:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1889,7 +1892,7 @@ tlskip0:
    je tlskip1
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x800F0 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x00F0 + r12*8], r8
 tlskip1:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1907,7 +1910,7 @@ tlskip1:
    je tlskip2
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x801E0 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x01E0 + r12*8], r8
 tlskip2:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1925,7 +1928,7 @@ tlskip2:
    je tlskip3
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x802D0 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x02D0 + r12*8], r8
 tlskip3:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1943,7 +1946,7 @@ tlskip3:
    je tlskip4
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x803C0 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x03C0 + r12*8], r8
 tlskip4:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1961,7 +1964,7 @@ tlskip4:
    je tlskip5
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x804B0 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x04B0 + r12*8], r8
 tlskip5:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1979,7 +1982,7 @@ tlskip5:
    je tlskip6
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x805A0 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x05A0 + r12*8], r8
 tlskip6:
    mov rdi, name_buf
    mov rsi, blkp
@@ -1997,7 +2000,7 @@ tlskip6:
    je tlskip7
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x80690 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x0690 + r12*8], r8
 tlskip7:
    mov rdi, name_buf
    mov rsi, blkp
@@ -2015,7 +2018,7 @@ tlskip7:
    je tlskip8
    add r8, 0x100000
    add r8,[smollm2_gguf_hdr_len]
-   mov [0x80780 + r12*8], r8
+   mov [TENSOR_TBL_BASE + 0x0780 + r12*8], r8
 tlskip8:
    inc r12
    jmp tlouter
@@ -3728,7 +3731,7 @@ char: db 0
 fndn: db 'number of cores found: ', 0
 idttbl:
 dw 4095
-dq 0x80210
+dq IDT_BASE
 head: db '+------------------------------------------------------------------------------+|                                 SofaOS X64                                   |+------------------------------------------------------------------------------+', 0
 hlpcm: db 'help', 0
 vercm: db 'ver', 0
