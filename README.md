@@ -1,3 +1,4 @@
+qemu-system-x86_64 -m 2G -M q35 -drive id=disk0,file=SofaOs.iso,format=raw,if=none -device ahci,id=ahci0 -device ide-hd,drive=disk0,bus=ahci0.0,bootindex=0 -display curses -d int,guest_errors -D crash.log
 # SofaOS
 
 A custom operating system with experimental on-device AI command support.
