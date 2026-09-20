@@ -38,7 +38,7 @@ Running in QEMU
 
 To run the full version of SofaOS (with AI support) in QEMU, make sure SmolLM2-135M-Instruct-f16.gguf is present, then run:
 
-bash
+
 qemu-system-x86_64 \
   -m 2G \
   -M q35 \
@@ -54,11 +54,6 @@ Building from Source
 
 The build assembles the ISO from several NASM-compiled components plus the GGUF model, padding each stage to a 512-byte sector boundary before concatenating the next piece.
 
-bash
-#!/usr/bin/env bash
-set -e
-
-MODEL="/storage/emulated/0/Download/SmolLM2-135M-Instruct-f16.gguf"
 
 # Round a byte count up to the next 512-byte boundary
 roundup() { echo $(( ($1 + 511) / 512 * 512 )); }
