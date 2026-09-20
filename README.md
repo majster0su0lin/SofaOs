@@ -18,7 +18,7 @@ just this command
 for full sofaos make sure you hsve the right model : SmolLM2-135M-Instruct-f16.gguf
 
 
-((
+''
 roundup() { echo $(( ($1 + 511) / 512 * 512 )); }
 nasm -f bin btldr1 -o btldr1.o
 nasm -f bin btldr2 -o btldr2.o
@@ -30,4 +30,4 @@ cat prefix.bin /storage/emulated/0/Download/SmolLM2-135M-Instruct-f16.gguf > sta
 truncate -s $(roundup $(wc -c < stage2.bin)) stage2.bin
 truncate -s $(roundup $(wc -c < e.o)) e.o
 cat stage2.bin e.o > SofaOs.iso
-))
+''
