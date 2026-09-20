@@ -87,3 +87,5 @@ Output: SofaOs.iso — the full, AI-capable build.
 Known Issues
 AI commands produce output but are not reliable — treat results as experimental, not correct.
 Improper use (wrong boot mode, missing disks, etc.) can trigger general protection faults (GPFs).
+
+credits: me (ersgame, scrt401, majster0su0lin) 3 names one person
