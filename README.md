@@ -1,8 +1,8 @@
-SofaOS
+# SofaOS
 
 A custom operating system with experimental on-device AI command support.
 
-WORK IN PROGRESS. THE SYSTEM ISN'T PERFECT — YOU WILL ENCOUNTER BUGS (GPFS, ETC.) IF USED INCORRECTLY. AI COMMANDS ARE PARTIALLY FUNCTIONAL: THEY PRODUCE OUTPUT, BUT IT'S NOT RELIABLY CORRECT YET, SO DON'T RELY ON THEM FOR ANYTHING IMPORTANT.
+WORK IN PROGRESS. THE SYSTEM ISN'T PERFECT — YOU WILL ENCOUNTER BUGS (GPFS, ETC.) IF USED INCORRECTLY. AI COMMANDS ARE PARTIALLY FUNCTIONAL: SOME PRODUCE OUTPUT, BUT IT'S NOT RELIABLY CORRECT YET, SO DON'T RELY ON THEM FOR ANYTHING IMPORTANT.
 
 Requirements:
 if full:
@@ -55,32 +55,32 @@ Building from Source
 The build assembles the ISO from several NASM-compiled components plus the GGUF model, padding each stage to a 512-byte sector boundary before concatenating the next piece.
 
 
-# Round a byte count up to the next 512-byte boundary
+## Round a byte count up to the next 512-byte boundary
 roundup() { echo $(( ($1 + 511) / 512 * 512 )); }
 
-# 1. Assemble bootloader + kernel components
+## 1. Assemble bootloader + kernel components
 nasm -f bin btldr1        -o btldr1.o
 nasm -f bin btldr2        -o btldr2.o
 nasm -f bin kernel        -o kernel.o
 nasm -f bin endingsrting  -o e.o
 
-# 2. Combine bootloader + kernel, pad to sector size
+## 2. Combine bootloader + kernel, pad to sector size
 cat btldr1.o btldr2.o kernel.o > prefix.bin
 truncate -s "$(roundup "$(wc -c < prefix.bin)")" prefix.bin
 
-# 3. Append the GGUF model, pad again
+## 3. Append the GGUF model, pad again
 cat prefix.bin "$MODEL" > stage2.bin
 truncate -s "$(roundup "$(wc -c < stage2.bin)")" stage2.bin
 
-# 4. Pad the ending/trailer section
+## 4. Pad the ending/trailer section
 truncate -s "$(roundup "$(wc -c < e.o)")" e.o
 
-# 5. Final image
+## 5. Final image
 cat stage2.bin e.o > SofaOs.iso
 
 Output: SofaOs.iso — the full, AI-capable build.
 
-ok after you succesfully booted you can type help to see avalible commands
+***after you succesfully booted you can type*** <ins>help</ins> ***to see avalible commands***
 
 
 
