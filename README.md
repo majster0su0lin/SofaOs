@@ -2,11 +2,16 @@ SofaOS
 
 A custom operating system with experimental on-device AI command support.
 
-⚠️ Status: Work in progress. The system isn't perfect — you will encounter bugs (GPFs, etc.) if used incorrectly. AI commands are partially functional: they produce output, but it's not reliably correct yet, so don't rely on them for anything important.
+WORK IN PROGRESS. THE SYSTEM ISN'T PERFECT — YOU WILL ENCOUNTER BUGS (GPFS, ETC.) IF USED INCORRECTLY. AI COMMANDS ARE PARTIALLY FUNCTIONAL: THEY PRODUCE OUTPUT, BUT IT'S NOT RELIABLY CORRECT YET, SO DON'T RELY ON THEM FOR ANYTHING IMPORTANT.
 
-Requirements
-SofaOs.iso (full build, includes AI support)
+Requirements:
+if full:
+SofaOs.iso (full build, includes AI support, needs to be built)
 SmolLM2-135M-Instruct-f16.gguf — required model for AI commands
+QEMU (for emulated testing) or a spare USB/disk + Rufus (for real hardware)
+Booting
+if base:
+stocSofaOs.iso (prebuilt)
 QEMU (for emulated testing) or a spare USB/disk + Rufus (for real hardware)
 Booting
 
@@ -18,15 +23,17 @@ stockSofaOs.iso boots fully on its own, without the GGUF model attached. This is
 
 Burn stockSofaOs.iso to a USB using Rufus.
 Boot from the USB. It will read from whatever disk happens to be available on the PC.
-Option B — Dedicated "sofadisk" boot (for AI/secr reading)
+Option B — Dedicated sofadisk boot (for AI/secr reading)
 
 If you want the AI commands to read specifically from a dedicated disk:
 
-Burn SofaOs.iso onto a disk (this becomes your "sofadisk").
+Burn SofaOs.iso onto a disk (this becomes your sofadisk).
 Remove all other disks from the PC.
 Insert the sofadisk.
 Enable Legacy Boot in your BIOS/UEFI settings.
 Boot.
+
+
 Running in QEMU
 
 To run the full version of SofaOS (with AI support) in QEMU, make sure SmolLM2-135M-Instruct-f16.gguf is present, then run:
@@ -41,6 +48,8 @@ qemu-system-x86_64 \
   -display curses \
   -d int,guest_errors \
   -D crash.log
+
+
 Building from Source
 
 The build assembles the ISO from several NASM-compiled components plus the GGUF model, padding each stage to a 512-byte sector boundary before concatenating the next piece.
@@ -76,7 +85,9 @@ cat stage2.bin e.o > SofaOs.iso
 
 Output: SofaOs.iso — the full, AI-capable build.
 
-Note: this script is a best-effort reconstruction of the build steps as described. Double-check the padding order and component names (btldr1, btldr2, kernel, endingsrting) match your actual source files before relying on it.
+ok after you succesfully booted you can type help to see avalible commands
+
+
 
 Known Issues
 AI commands produce output but are not reliable — treat results as experimental, not correct.
