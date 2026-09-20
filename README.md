@@ -1,33 +1,83 @@
-ok so u want to know about sofaos 
-so first things first the ai commands kind of work 
-they arent realy outputting right things but arend doing nothing
-so dont realy use them
-second booting
-stockSofaos.iso is fully working without the gguf attached to it
-if you dont care about secr reading from tge usb and instead from random disk on ur pc you can get rufus and burn it onto a usb
-but if you want secr to read from sofadisk burn sofaos onto a disk remove all discs from pc insert sofadisk andmd boot
-also make sure to enable legacy boot
-note rhe system isnt perfect so you will encounter some gp if used wrong
-biw for qemu 
-{
-'''bash
-qemu-system-x86_64 -m 2G -M q35 -drive id=disk0,file=SofaOs.iso,format=raw,if=none -device ahci,id=ahci0 -device ide-hd,drive=disk0,bus=ahci0.0,bootindex=0 -display curses -d int,guest_errors -D crash.log
-'''
-\{
-just this command
-for full sofaos make sure you hsve the right model : SmolLM2-135M-Instruct-f16.gguf
+SofaOS
 
+A custom operating system with experimental on-device AI command support.
 
-'''bash
+⚠️ Status: Work in progress. The system isn't perfect — you will encounter bugs (GPFs, etc.) if used incorrectly. AI commands are partially functional: they produce output, but it's not reliably correct yet, so don't rely on them for anything important.
+
+Requirements
+SofaOs.iso (full build, includes AI support)
+SmolLM2-135M-Instruct-f16.gguf — required model for AI commands
+QEMU (for emulated testing) or a spare USB/disk + Rufus (for real hardware)
+Booting
+
+There are two ways to boot SofaOS, depending on whether you need the AI features to read from a specific disk.
+
+Option A — Quick boot (no dedicated disk)
+
+stockSofaOs.iso boots fully on its own, without the GGUF model attached. This is fine if you don't care about the AI commands reading from a specific disk.
+
+Burn stockSofaOs.iso to a USB using Rufus.
+Boot from the USB. It will read from whatever disk happens to be available on the PC.
+Option B — Dedicated "sofadisk" boot (for AI/secr reading)
+
+If you want the AI commands to read specifically from a dedicated disk:
+
+Burn SofaOs.iso onto a disk (this becomes your "sofadisk").
+Remove all other disks from the PC.
+Insert the sofadisk.
+Enable Legacy Boot in your BIOS/UEFI settings.
+Boot.
+Running in QEMU
+
+To run the full version of SofaOS (with AI support) in QEMU, make sure SmolLM2-135M-Instruct-f16.gguf is present, then run:
+
+bash
+qemu-system-x86_64 \
+  -m 2G \
+  -M q35 \
+  -drive id=disk0,file=SofaOs.iso,format=raw,if=none \
+  -device ahci,id=ahci0 \
+  -device ide-hd,drive=disk0,bus=ahci0.0,bootindex=0 \
+  -display curses \
+  -d int,guest_errors \
+  -D crash.log
+Building from Source
+
+The build assembles the ISO from several NASM-compiled components plus the GGUF model, padding each stage to a 512-byte sector boundary before concatenating the next piece.
+
+bash
+#!/usr/bin/env bash
+set -e
+
+MODEL="/storage/emulated/0/Download/SmolLM2-135M-Instruct-f16.gguf"
+
+# Round a byte count up to the next 512-byte boundary
 roundup() { echo $(( ($1 + 511) / 512 * 512 )); }
-nasm -f bin btldr1 -o btldr1.o
-nasm -f bin btldr2 -o btldr2.o
-nasm -f bin kernel -o kernel.o
-nasm -f bin endingsrting -o e.o
+
+# 1. Assemble bootloader + kernel components
+nasm -f bin btldr1        -o btldr1.o
+nasm -f bin btldr2        -o btldr2.o
+nasm -f bin kernel        -o kernel.o
+nasm -f bin endingsrting  -o e.o
+
+# 2. Combine bootloader + kernel, pad to sector size
 cat btldr1.o btldr2.o kernel.o > prefix.bin
-truncate -s $(roundup $(wc -c < prefix.bin)) prefix.bin
-cat prefix.bin /storage/emulated/0/Download/SmolLM2-135M-Instruct-f16.gguf > stage2.bin
-truncate -s $(roundup $(wc -c < stage2.bin)) stage2.bin
-truncate -s $(roundup $(wc -c < e.o)) e.o
+truncate -s "$(roundup "$(wc -c < prefix.bin)")" prefix.bin
+
+# 3. Append the GGUF model, pad again
+cat prefix.bin "$MODEL" > stage2.bin
+truncate -s "$(roundup "$(wc -c < stage2.bin)")" stage2.bin
+
+# 4. Pad the ending/trailer section
+truncate -s "$(roundup "$(wc -c < e.o)")" e.o
+
+# 5. Final image
 cat stage2.bin e.o > SofaOs.iso
-'''
+
+Output: SofaOs.iso — the full, AI-capable build.
+
+Note: this script is a best-effort reconstruction of the build steps as described. Double-check the padding order and component names (btldr1, btldr2, kernel, endingsrting) match your actual source files before relying on it.
+
+Known Issues
+AI commands produce output but are not reliable — treat results as experimental, not correct.
+Improper use (wrong boot mode, missing disks, etc.) can trigger general protection faults (GPFs).
