@@ -1,4 +1,4 @@
-qemu-system-x86_64 -m 2G -M q35 -drive id=disk0,file=SofaOs.iso,format=raw,if=none -device ahci,id=ahci0 -device ide-hd,drive=disk0,bus=ahci0.0,bootindex=0 -display curses -d int,guest_errors -D crash.log
+
 # SofaOS
 
 A custom operating system with experimental on-device AI command support.
@@ -40,17 +40,9 @@ Running in QEMU
 To run the full version of SofaOS (with AI support) in QEMU, make sure SmolLM2-135M-Instruct-f16.gguf is present, then run:
 
 
-qemu-system-x86_64 \
-  -m 2G \
-  -M q35 \
-  -drive id=disk0,file=SofaOs.iso,format=raw,if=none \
-  -device ahci,id=ahci0 \
-  -device ide-hd,drive=disk0,bus=ahci0.0,bootindex=0 \
-  -display curses \
-  -d int,guest_errors \
-  -D crash.log
+qemu-system-x86_64 -m 2G -M q35 -drive id=disk0,file=SofaOs.iso,format=raw,if=none -device ahci,id=ahci0 -device ide-hd,drive=disk0,bus=ahci0.0,bootindex=0 -display curses -d int,guest_errors -D crash.log
 
-
+you can also use this command to run non ai version
 Building from Source
 
 The build assembles the ISO from several NASM-compiled components plus the GGUF model, padding each stage to a 512-byte sector boundary before concatenating the next piece.
