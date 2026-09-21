@@ -86,22 +86,39 @@ Improper use (wrong boot mode, missing disks, etc.) can trigger general protecti
 
 ##FUNctions:
 help - prints help txt
+
 ver - shows version
+
 credits - shows one of my names
+
 cls - clear the screen
+
 whatincr - shows control registers
+
 whatindr shows debug regiaters
+
 saythis - echo but better
+
 translate - hex -> dec, dec -> hex , expected use translate 0x1234af or -||- 1235606
+
 peek - shows whats on given adreess , expected peek 123
+
 time - shows time
+
 secr - shows whats in given sector , secr 8
+
 put - writes byte into mem, put 63 53, number adress
+
 wakeup - wakes up aps , wakeup 3 , number of aps (currently not working)
+
 loadai - loads gguf fron disc (currently not working)	
+
 setupai - sets up the gguf AFTER LOADING
+
 askai - shold run the weights output is the tokenizer which works but the output doesnt
+
 inout - puts number to a given port and then listens from given port 2 , inout 67 29 20, number port to put port to listen
+
 
 credits: me (ersgame, scrt401, majster0su0lin) 3 names one person
 
