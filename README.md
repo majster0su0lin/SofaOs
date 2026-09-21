@@ -3,6 +3,8 @@
 
 A custom operating system with experimental on-device AI command support.
 
+![testg](g.gif)
+
 WORK IN PROGRESS. THE SYSTEM ISN'T PERFECT — YOU WILL ENCOUNTER BUGS (GPFS, ETC.) IF USED INCORRECTLY. AI COMMANDS ARE PARTIALLY FUNCTIONAL: SOME PRODUCE OUTPUT, BUT IT'S NOT RELIABLY CORRECT YET, SO DON'T RELY ON THEM FOR ANYTHING IMPORTANT.
 
 please before running anything on a real pc please look a bit onto the code so you can determine what does what to not brick your pc also dont send random numbers to random ports ring 0 is no joke and reqires some knowlage
